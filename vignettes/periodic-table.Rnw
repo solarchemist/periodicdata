@@ -1,0 +1,372 @@
+%\VignetteIndexEntry{Periodic Table of the Elements}
+%\VignetteEngine{knitr::knitr}
+%\VignetteKeyword{Periodic table}
+%\VignetteKeyword{IUPAC}
+%\VignetteKeyword{LaTeX}
+%\VignetteKeyword{TikZ}
+
+%% This work was created by Taha Ahmed, 2010
+%% Last updated: 2019-07-30
+%% This work is a derived work.
+%% Original work by Ivan Griffin
+%% http://www.texample.net/tikz/examples/periodic-table-of-chemical-elements/
+%% Layout based on the IUPAC periodic table
+%% https://iupac.org/what-we-do/periodic-table-of-elements/
+
+
+\documentclass{article}
+%%%% A4 page options
+\usepackage[landscape,%
+   a4paper,%
+   noheadfoot,%
+   hmargin={0.125cm,0cm},%
+   vmargin={2cm,0cm}]%
+   {geometry}
+\pagestyle{empty}
+%%%%
+
+\usepackage{tikz}
+\usepackage[tightpage]{preview}
+\usetikzlibrary{shapes,calc,backgrounds}
+
+\newcommand{\CommonElementTextFormat}[4]{%
+   \begin{minipage}{2.2cm}
+      \centering
+      {\textbf{#1} \hfill #2}%
+      \linebreak \linebreak
+      {\textbf{#3}}%
+      \linebreak \linebreak
+      {{#4}}
+   \end{minipage}
+}
+
+\newcommand{\NaturalElementTextFormat}[4]{%
+  \CommonElementTextFormat{#1}{#2}{\LARGE {#3}}{#4}
+}
+
+\newcommand{\OutlineText}[1]{%
+   % Couldn't find a nicer way of doing an outline font with TikZ
+   % other than using pdfliteral 1 Tr
+   \pdfliteral direct {0.5 w 1 Tr}{#1}%
+   \pdfliteral direct {1 w 0 Tr}%
+}
+
+\newcommand{\SyntheticElementTextFormat}[4]{%
+   \CommonElementTextFormat{#1}{#2}{\OutlineText{\LARGE #3}}{#4}
+}
+
+\newlength{\LegendBoxHalfWidth}
+\setlength{\LegendBoxHalfWidth}{0.4em}
+\newlength{\LegendBoxYOffset}
+\setlength{\LegendBoxYOffset}{1.25ex}
+\newlength{\LegendTitleXOffset}
+\setlength{\LegendTitleXOffset}{-1.0em}
+
+% ----------------------------------------------------------------------
+% R SETUP
+% ----------------------------------------------------------------------
+<<'R-setup', echo=F, results='hide', cache=FALSE>>=
+# Note that we are not doing anything with R in this document
+# It's just included so the vignette check in devtools package build does not complain
+options(
+   digits   = 7,
+   width    = 84,
+   continue = "  ",
+   prompt   = "> ",
+   stringsAsFactors = FALSE)
+@
+% ----------------------------------------------------------------------
+
+% ----------------------------------------------------------------------
+% R LOAD PACKAGES
+% ----------------------------------------------------------------------
+<<'load-R-packages', echo=F, results='hide', message=FALSE>>=
+# packages listed here should also be listed under Suggests in DESCRIPTION
+library(knitr)
+opts_knit$set(
+   self.contained = FALSE,
+   child.path = '')
+opts_chunk$set(
+   cache = FALSE,
+   size = 'footnotesize',
+   echo = FALSE,
+   eval = TRUE,
+   results = 'hide',
+   message = FALSE,
+   tidy = FALSE)
+@
+% ----------------------------------------------------------------------
+
+\begin{document}
+\begin{preview}
+%% Scale factor 0.56 fits snugly into a landscape A4 paper
+\begin{tikzpicture}[font=\sffamily, scale=0.56, transform shape]
+
+%% Fill Color Styles
+   \tikzstyle{ElementFill} = [fill=yellow!15]
+   \tikzstyle{AlkaliMetalFill} = [fill=blue!55]
+   \tikzstyle{AlkalineEarthMetalFill} = [fill=blue!40]
+   \tikzstyle{MetalFill} = [fill=blue!25]
+   \tikzstyle{MetalloidFill} = [fill=orange!25]
+   \tikzstyle{NonmetalFill} = [fill=green!25]
+   \tikzstyle{HalogenFill} = [fill=green!40]
+   \tikzstyle{NobleGasFill} = [fill=green!55]
+   \tikzstyle{LanthanideActinideFill} = [fill=purple!25]
+
+%% Element Styles
+   \tikzstyle{Element} = [draw=black, ElementFill,
+      minimum width=2.75cm, minimum height=2.75cm, node distance=2.75cm]
+   \tikzstyle{AlkaliMetal} = [Element, AlkaliMetalFill]
+   \tikzstyle{AlkalineEarthMetal} = [Element, AlkalineEarthMetalFill]
+   \tikzstyle{Metal} = [Element, MetalFill]
+   \tikzstyle{Metalloid} = [Element, MetalloidFill]
+   \tikzstyle{Nonmetal} = [Element, NonmetalFill]
+   \tikzstyle{Halogen} = [Element, HalogenFill]
+   \tikzstyle{NobleGas} = [Element, NobleGasFill]
+   \tikzstyle{LanthanideActinide} = [Element, LanthanideActinideFill]
+   \tikzstyle{PeriodLabel} = [font={\sffamily\LARGE}, node distance=2.0cm]
+   \tikzstyle{GroupLabel} = [font={\sffamily\LARGE}, minimum width=2.75cm, node distance=2.0cm]
+   \tikzstyle{TitleLabel} = [font={\sffamily\Huge\bfseries}]
+
+%% Group 1 - IA
+   \node[name=H, Element] {\NaturalElementTextFormat{1}{1.0079}{H}{Hydrogen}};
+   \node[name=Li, below of=H, AlkaliMetal] {\NaturalElementTextFormat{3}{6.941}{Li}{Lithium}};
+   \node[name=Na, below of=Li, AlkaliMetal] {\NaturalElementTextFormat{11}{22.990}{Na}{Sodium}};
+   \node[name=K, below of=Na, AlkaliMetal] {\NaturalElementTextFormat{19}{39.098}{K}{Potassium}};
+   \node[name=Rb, below of=K, AlkaliMetal] {\NaturalElementTextFormat{37}{85.468}{Rb}{Rubidium}};
+   \node[name=Cs, below of=Rb, AlkaliMetal] {\NaturalElementTextFormat{55}{132.91}{Cs}{Caesium}};
+   \node[name=Fr, below of=Cs, AlkaliMetal] {\NaturalElementTextFormat{87}{223}{Fr}{Francium}};
+
+%% Group 2 - IIA
+   \node[name=Be, right of=Li, AlkalineEarthMetal] {\NaturalElementTextFormat{4}{9.0122}{Be}{Beryllium}};
+   \node[name=Mg, below of=Be, AlkalineEarthMetal] {\NaturalElementTextFormat{12}{24.305}{Mg}{Magnesium}};
+   \node[name=Ca, below of=Mg, AlkalineEarthMetal] {\NaturalElementTextFormat{20}{40.078}{Ca}{Calcium}};
+   \node[name=Sr, below of=Ca, AlkalineEarthMetal] {\NaturalElementTextFormat{38}{87.62}{Sr}{Strontium}};
+   \node[name=Ba, below of=Sr, AlkalineEarthMetal] {\NaturalElementTextFormat{56}{137.33}{Ba}{Barium}};
+   \node[name=Ra, below of=Ba, AlkalineEarthMetal] {\NaturalElementTextFormat{88}{226}{Ra}{Radium}};
+
+%% Group 3 - IIIB
+   \node[name=Sc, right of=Ca, Metal] {\NaturalElementTextFormat{21}{44.956}{Sc}{Scandium}};
+   \node[name=Y, below of=Sc, Metal] {\NaturalElementTextFormat{39}{88.906}{Y}{Yttrium}};
+   \node[name=LaLu, below of=Y, LanthanideActinide] {\NaturalElementTextFormat{57-71}{}{La-Lu}{Lanthanoids}};%corr
+   \node[name=AcLr, below of=LaLu, LanthanideActinide] {\NaturalElementTextFormat{89-103}{}{Ac-Lr}{Actinoids}};%corr
+
+%% Group 4 - IVB
+   \node[name=Ti, right of=Sc, Metal] {\NaturalElementTextFormat{22}{47.867}{Ti}{Titanium}};
+   \node[name=Zr, below of=Ti, Metal] {\NaturalElementTextFormat{40}{91.224}{Zr}{Zirconium}};
+   \node[name=Hf, below of=Zr, Metal] {\NaturalElementTextFormat{72}{178.49}{Hf}{Halfnium}};
+   \node[name=Rf, below of=Hf, Metal] {\SyntheticElementTextFormat{104}{261}{Rf}{Rutherfordium}};
+
+%% Group 5 - VB
+   \node[name=V, right of=Ti, Metal] {\NaturalElementTextFormat{23}{50.942}{V}{Vanadium}};
+   \node[name=Nb, below of=V, Metal] {\NaturalElementTextFormat{41}{92.906}{Nb}{Niobium}};
+   \node[name=Ta, below of=Nb, Metal] {\NaturalElementTextFormat{73}{180.95}{Ta}{Tantalum}};
+   \node[name=Db, below of=Ta, Metal] {\SyntheticElementTextFormat{105}{262}{Db}{Dubnium}};
+
+%% Group 6 - VIB
+   \node[name=Cr, right of=V, Metal] {\NaturalElementTextFormat{24}{51.996}{Cr}{Chromium}};
+   \node[name=Mo, below of=Cr, Metal] {\NaturalElementTextFormat{42}{95.94}{Mo}{Molybdenum}};
+   \node[name=W, below of=Mo, Metal] {\NaturalElementTextFormat{74}{183.84}{W}{Tungsten}};
+   \node[name=Sg, below of=W, Metal] {\SyntheticElementTextFormat{106}{266}{Sg}{Seaborgium}};
+
+%% Group 7 - VIIB
+   \node[name=Mn, right of=Cr, Metal] {\NaturalElementTextFormat{25}{54.938}{Mn}{Manganese}};
+   \node[name=Tc, below of=Mn, Metal] {\NaturalElementTextFormat{43}{96}{Tc}{Technetium}};
+   \node[name=Re, below of=Tc, Metal] {\NaturalElementTextFormat{75}{186.21}{Re}{Rhenium}};
+   \node[name=Bh, below of=Re, Metal] {\SyntheticElementTextFormat{107}{264}{Bh}{Bohrium}};
+
+%% Group 8 - VIIIB
+   \node[name=Fe, right of=Mn, Metal] {\NaturalElementTextFormat{26}{55.845}{Fe}{Iron}};
+   \node[name=Ru, below of=Fe, Metal] {\NaturalElementTextFormat{44}{101.07}{Ru}{Ruthenium}};
+   \node[name=Os, below of=Ru, Metal] {\NaturalElementTextFormat{76}{190.23}{Os}{Osmium}};
+   \node[name=Hs, below of=Os, Metal] {\SyntheticElementTextFormat{108}{277}{Hs}{Hassium}};
+
+%% Group 9 - VIIIB
+   \node[name=Co, right of=Fe, Metal] {\NaturalElementTextFormat{27}{58.933}{Co}{Cobalt}};
+   \node[name=Rh, below of=Co, Metal] {\NaturalElementTextFormat{45}{102.91}{Rh}{Rhodium}};
+   \node[name=Ir, below of=Rh, Metal] {\NaturalElementTextFormat{77}{192.22}{Ir}{Iridium}};
+   \node[name=Mt, below of=Ir, Metal] {\SyntheticElementTextFormat{109}{268}{Mt}{Meitnerium}};
+
+%% Group 10 - VIIIB
+   \node[name=Ni, right of=Co, Metal] {\NaturalElementTextFormat{28}{58.693}{Ni}{Nickel}};
+   \node[name=Pd, below of=Ni, Metal] {\NaturalElementTextFormat{46}{106.42}{Pd}{Palladium}};
+   \node[name=Pt, below of=Pd, Metal] {\NaturalElementTextFormat{78}{195.08}{Pt}{Platinum}};
+   \node[name=Ds, below of=Pt, Metal] {\SyntheticElementTextFormat{110}{281}{Ds}{Darmstadtium}};
+
+%% Group 11 - IB
+   \node[name=Cu, right of=Ni, Metal] {\NaturalElementTextFormat{29}{63.546}{Cu}{Copper}};
+   \node[name=Ag, below of=Cu, Metal] {\NaturalElementTextFormat{47}{107.87}{Ag}{Silver}};
+   \node[name=Au, below of=Ag, Metal] {\NaturalElementTextFormat{79}{196.97}{Au}{Gold}};
+   \node[name=Rg, below of=Au, Metal] {\SyntheticElementTextFormat{111}{280}{Rg}{Roentgenium}};
+
+%% Group 12 - IIB
+   \node[name=Zn, right of=Cu, Metal] {\NaturalElementTextFormat{30}{65.39}{Zn}{Zinc}};
+   \node[name=Cd, below of=Zn, Metal] {\NaturalElementTextFormat{48}{112.41}{Cd}{Cadmium}};
+   \node[name=Hg, below of=Cd, Metal] {\NaturalElementTextFormat{80}{200.59}{Hg}{Mercury}};
+   \node[name=Cn, below of=Hg, Metal] {\SyntheticElementTextFormat{112}{285.18}{Cn}{Copernicium}};
+
+%% Group 13 - IIIA
+   \node[name=Ga, right of=Zn, Metal] {\NaturalElementTextFormat{31}{69.723}{Ga}{Gallium}};
+   \node[name=Al, above of=Ga, Metal] {\NaturalElementTextFormat{13}{26.982}{Al}{Aluminium}};
+   \node[name=B, above of=Al, Metalloid] {\NaturalElementTextFormat{5}{10.811}{B}{Boron}};
+   \node[name=In, below of=Ga, Metal] {\NaturalElementTextFormat{49}{114.82}{In}{Indium}};
+   \node[name=Tl, below of=In, Metal] {\NaturalElementTextFormat{81}{204.38}{Tl}{Thallium}};
+   \node[name=Nh, below of=Tl, Metal] {\SyntheticElementTextFormat{113}{284.18}{Nh}{Nihonium}};
+
+%% Group 14 - IVA
+   \node[name=C, right of=B, Nonmetal] {\NaturalElementTextFormat{6}{12.011}{C}{Carbon}};
+   \node[name=Si, below of=C, Metalloid] {\NaturalElementTextFormat{14}{28.086}{Si}{Silicon}};
+   \node[name=Ge, below of=Si, Metalloid] {\NaturalElementTextFormat{32}{72.64}{Ge}{Germanium}};
+   \node[name=Sn, below of=Ge, Metal] {\NaturalElementTextFormat{50}{118.71}{Sn}{Tin}};
+   \node[name=Pb, below of=Sn, Metal] {\NaturalElementTextFormat{82}{207.2}{Pb}{Lead}};
+   \node[name=Fl, below of=Pb, Metal] {\SyntheticElementTextFormat{114}{289.19}{Fl}{Flerovium}};
+
+%% Group 15 - VA
+   \node[name=N, right of=C, Nonmetal] {\NaturalElementTextFormat{7}{14.007}{N}{Nitrogen}};
+   \node[name=P, below of=N, Nonmetal] {\NaturalElementTextFormat{15}{30.974}{P}{Phosphorus}};
+   \node[name=As, below of=P, Metalloid] {\NaturalElementTextFormat{33}{74.922}{As}{Arsenic}};
+   \node[name=Sb, below of=As, Metalloid] {\NaturalElementTextFormat{51}{121.76}{Sb}{Antimony}};
+   \node[name=Bi, below of=Sb, Metal] {\NaturalElementTextFormat{83}{208.98}{Bi}{Bismuth}};
+   \node[name=Mc, below of=Bi, Metal] {\SyntheticElementTextFormat{115}{288.19}{Mc}{Moscovium}};
+
+%% Group 16 - VIA
+   \node[name=O, right of=N, Nonmetal] {\NaturalElementTextFormat{8}{15.999}{O}{Oxygen}};
+   \node[name=S, below of=O, Nonmetal] {\NaturalElementTextFormat{16}{32.065}{S}{Sulphur}};
+   \node[name=Se, below of=S, Nonmetal] {\NaturalElementTextFormat{34}{78.96}{Se}{Selenium}};
+   \node[name=Te, below of=Se, Metalloid] {\NaturalElementTextFormat{52}{127.6}{Te}{Tellurium}};
+   \node[name=Po, below of=Te, Metalloid] {\NaturalElementTextFormat{84}{209}{Po}{Polonium}};
+   \node[name=Lv, below of=Po, Metal] {\SyntheticElementTextFormat{116}{293.20}{Lv}{Livermorium}};
+
+%% Group 17 - VIIA
+   \node[name=F, right of=O, Halogen] {\NaturalElementTextFormat{9}{18.998}{F}{Flourine}};
+   \node[name=Cl, below of=F, Halogen] {\NaturalElementTextFormat{17}{35.453}{Cl}{Chlorine}};
+   \node[name=Br, below of=Cl, Halogen] {\NaturalElementTextFormat{35}{79.904}{Br}{Bromine}};
+   \node[name=I, below of=Br, Halogen] {\NaturalElementTextFormat{53}{126.9}{I}{Iodine}};
+   \node[name=At, below of=I, Halogen] {\NaturalElementTextFormat{85}{210}{At}{Astatine}};
+   \node[name=Ts, below of=At, Metal] {\SyntheticElementTextFormat{117}{292.21}{Ts}{Tennessine}};
+
+%% Group 18 - VIIIA
+   \node[name=Ne, right of=F, NobleGas] {\NaturalElementTextFormat{10}{20.180}{Ne}{Neon}};
+   \node[name=He, above of=Ne, NobleGas] {\NaturalElementTextFormat{2}{4.0025}{He}{Helium}};
+   \node[name=Ar, below of=Ne, NobleGas] {\NaturalElementTextFormat{18}{39.948}{Ar}{Argon}};
+   \node[name=Kr, below of=Ar, NobleGas] {\NaturalElementTextFormat{36}{83.8}{Kr}{Krypton}};
+   \node[name=Xe, below of=Kr, NobleGas] {\NaturalElementTextFormat{54}{131.29}{Xe}{Xenon}};
+   \node[name=Rn, below of=Xe, NobleGas] {\NaturalElementTextFormat{86}{222}{Rn}{Radon}};
+   \node[name=Og, below of=Rn, Metal] {\SyntheticElementTextFormat{118}{294.21}{Og}{Oganesson}};
+
+%% Period
+   \node[name=Period1, left of=H, PeriodLabel]  {1};
+   \node[name=Period2, left of=Li, PeriodLabel] {2};
+   \node[name=Period3, left of=Na, PeriodLabel] {3};
+   \node[name=Period4, left of=K, PeriodLabel]  {4};
+   \node[name=Period5, left of=Rb, PeriodLabel] {5};
+   \node[name=Period6, left of=Cs, PeriodLabel] {6};
+   \node[name=Period7, left of=Fr, PeriodLabel] {7};
+
+%% Group
+   \node[name=Group1, above of=H, GroupLabel]    {1 \hfill IA};
+   \node[name=Group2, above of=Be, GroupLabel]   {2 \hfill IIA};
+   \node[name=Group3, above of=Sc, GroupLabel]   {3 \hfill IIIA};
+   \node[name=Group4, above of=Ti, GroupLabel]   {4 \hfill IVB};
+   \node[name=Group5, above of=V, GroupLabel]    {5 \hfill VB};
+   \node[name=Group6, above of=Cr, GroupLabel]   {6 \hfill VIB};
+   \node[name=Group7, above of=Mn, GroupLabel]   {7 \hfill VIIB};
+   \node[name=Group8, above of=Fe, GroupLabel]   {8 \hfill VIIIB};
+   \node[name=Group9, above of=Co, GroupLabel]   {9 \hfill VIIIB};
+   \node[name=Group10, above of=Ni, GroupLabel] {10 \hfill VIIIB};
+   \node[name=Group11, above of=Cu, GroupLabel] {11 \hfill IB};
+   \node[name=Group12, above of=Zn, GroupLabel] {12 \hfill IIB};
+   \node[name=Group13, above of=B, GroupLabel]  {13 \hfill IIIA};
+   \node[name=Group14, above of=C, GroupLabel]  {14 \hfill IVA};
+   \node[name=Group15, above of=N, GroupLabel]  {15 \hfill VA};
+   \node[name=Group16, above of=O, GroupLabel]  {16 \hfill VIA};
+   \node[name=Group17, above of=F, GroupLabel]  {17 \hfill VIIA};
+   \node[name=Group18, above of=He, GroupLabel] {18 \hfill VIIIA};
+
+%% Lanthanide
+   \node[name=La, below of=AcLr, LanthanideActinide, yshift=-1cm] {\NaturalElementTextFormat{57}{138.91}{La}{Lanthanum}};
+   \node[name=Ce, right of=La, LanthanideActinide] {\NaturalElementTextFormat{58}{140.12}{Ce}{Cerium}};
+   \node[name=Pr, right of=Ce, LanthanideActinide] {\NaturalElementTextFormat{59}{140.91}{Pr}{Praseodymium}};
+   \node[name=Nd, right of=Pr, LanthanideActinide] {\NaturalElementTextFormat{60}{144.24}{Nd}{Neodymium}};
+   \node[name=Pm, right of=Nd, LanthanideActinide] {\NaturalElementTextFormat{61}{145}{Pm}{Promethium}};
+   \node[name=Sm, right of=Pm, LanthanideActinide] {\NaturalElementTextFormat{62}{150.36}{Sm}{Samarium}};
+   \node[name=Eu, right of=Sm, LanthanideActinide] {\NaturalElementTextFormat{63}{151.96}{Eu}{Europium}};
+   \node[name=Gd, right of=Eu, LanthanideActinide] {\NaturalElementTextFormat{64}{157.25}{Gd}{Gadolinium}};
+   \node[name=Tb, right of=Gd, LanthanideActinide] {\NaturalElementTextFormat{65}{158.93}{Tb}{Terbium}};
+   \node[name=Dy, right of=Tb, LanthanideActinide] {\NaturalElementTextFormat{66}{162.50}{Dy}{Dysprosium}};
+   \node[name=Ho, right of=Dy, LanthanideActinide] {\NaturalElementTextFormat{67}{164.93}{Ho}{Holmium}};
+   \node[name=Er, right of=Ho, LanthanideActinide] {\NaturalElementTextFormat{68}{167.26}{Er}{Erbium}};
+   \node[name=Tm, right of=Er, LanthanideActinide] {\NaturalElementTextFormat{69}{168.93}{Tm}{Thulium}};
+   \node[name=Yb, right of=Tm, LanthanideActinide] {\NaturalElementTextFormat{70}{173.04}{Yb}{Ytterbium}};
+   \node[name=Lu, right of=Yb, LanthanideActinide] {\NaturalElementTextFormat{71}{174.97}{Lu}{Lutetium}};
+
+%% Actinide
+   \node[name=Ac, below of=La, LanthanideActinide, yshift=0cm] {\NaturalElementTextFormat{89}{227}{Ac}{Actinium}};
+   \node[name=Th, right of=Ac, LanthanideActinide] {\NaturalElementTextFormat{90}{232.04}{Th}{Thorium}};
+   \node[name=Pa, right of=Th, LanthanideActinide] {\NaturalElementTextFormat{91}{231.04}{Pa}{Protactinium}};
+   \node[name=U, right of=Pa, LanthanideActinide] {\NaturalElementTextFormat{92}{238.03}{U}{Uranium}};
+   \node[name=Np, right of=U, LanthanideActinide] {\SyntheticElementTextFormat{93}{237}{Np}{Neptunium}};
+   \node[name=Pu, right of=Np, LanthanideActinide] {\SyntheticElementTextFormat{94}{244}{Pu}{Plutonium}};
+   \node[name=Am, right of=Pu, LanthanideActinide] {\SyntheticElementTextFormat{95}{243}{Am}{Americium}};
+   \node[name=Cm, right of=Am, LanthanideActinide] {\SyntheticElementTextFormat{96}{247}{Cm}{Curium}};
+   \node[name=Bk, right of=Cm, LanthanideActinide] {\SyntheticElementTextFormat{97}{247}{Bk}{Berkelium}};
+   \node[name=Cf, right of=Bk, LanthanideActinide] {\SyntheticElementTextFormat{98}{251}{Cf}{Californium}};
+   \node[name=Es, right of=Cf, LanthanideActinide] {\SyntheticElementTextFormat{99}{252}{Es}{Einsteinium}};
+   \node[name=Fm, right of=Es, LanthanideActinide] {\SyntheticElementTextFormat{100}{257}{Fm}{Fermium}};
+   \node[name=Md, right of=Fm, LanthanideActinide] {\SyntheticElementTextFormat{101}{258}{Md}{Mendelevium}};
+   \node[name=No, right of=Md, LanthanideActinide] {\SyntheticElementTextFormat{102}{259}{No}{Nobelium}};
+   \node[name=Lr, right of=No, LanthanideActinide] {\SyntheticElementTextFormat{103}{262}{Lr}{Lawrencium}};
+
+%% Draw dashed lines connecting Lanthanide breakout to main table
+   \draw (AcLr.south west) edge[dashed] (La.north west)
+      (AcLr.south east) edge[dashed] (La.north east);
+
+%% Legend
+   \node at ($(H.north -| Ti.west) + (0em,0em)$)
+      [name=elementLegend, Element, fill=white]
+      {\NaturalElementTextFormat{Z}{mass}{Symbol}{Name}};
+   \node[Element, fill=white, below of=elementLegend, yshift=-1em]
+      {\SyntheticElementTextFormat{}{}{man-made}{}};
+
+   \node[name=AlkaliMetalLegend, anchor=north, black, AlkaliMetalFill,
+      inner sep=\LegendBoxHalfWidth, rectangle, draw]
+      at ($(elementLegend.north east) + (3em,0em)$) {};
+   \node[right of=AlkaliMetalLegend, anchor=west, xshift=\LegendTitleXOffset]
+      {Alkali metal};
+
+   \node[name=AlkalineEarthMetalLegend, below of=AlkaliMetalLegend, yshift=1ex,
+      black, AlkalineEarthMetalFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=AlkalineEarthMetalLegend, anchor=west, xshift=\LegendTitleXOffset]
+      {Alkaline earth metal};
+   \node[name=MetalLegend, below of=AlkalineEarthMetalLegend, yshift=\LegendBoxYOffset,
+      black, MetalFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=MetalLegend, anchor=west, xshift=\LegendTitleXOffset] {Metal};
+   \node[name=MetalloidLegend, below of=MetalLegend, yshift=\LegendBoxYOffset,
+      black, MetalloidFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=MetalloidLegend, anchor=west, xshift=\LegendTitleXOffset] {Metalloid};
+   \node[name=NonmetalLegend, below of=MetalloidLegend, yshift=\LegendBoxYOffset,
+      black, NonmetalFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=NonmetalLegend, anchor=west, xshift=\LegendTitleXOffset] {Non-metal};
+   \node[name=HalogenLegend, below of=NonmetalLegend, yshift=\LegendBoxYOffset,
+      black, HalogenFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=HalogenLegend, anchor=west, xshift=\LegendTitleXOffset] {Halogen};
+   \node[name=NobleGasLegend, below of=HalogenLegend, yshift=\LegendBoxYOffset,
+      black, NobleGasFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=NobleGasLegend, anchor=west, xshift=\LegendTitleXOffset] {Noble gas};
+   \node[name=LanthanideActinideLegend, below of=NobleGasLegend, yshift=\LegendBoxYOffset,
+      black, LanthanideActinideFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=LanthanideActinideLegend, anchor=west, xshift=\LegendTitleXOffset]
+      {Lanthanoids/Actinoids};
+
+%% Diagram Title
+   \node at (Co.north east) [name=diagramTitle, TitleLabel, yshift=30em]
+   {Periodic Table of the Elements};
+
+   \begin{pgfonlayer}{background}
+   \path[fill=white] (current bounding box.south west)
+   rectangle (current bounding box.north east);
+   \end{pgfonlayer}
+
+\end{tikzpicture}
+\end{preview}
+\end{document}

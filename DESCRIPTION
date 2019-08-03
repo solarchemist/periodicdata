@@ -4,11 +4,22 @@ Title: Properties of the chemical elements
 Version: 0.0.0.9000
 Author: Taha Ahmed
 Maintainer: Taha Ahmed <taha@chepec.se>
-Description: Provides a dataset of the properties of the chemical elements.
-    Collected by the author, with references to data sources where possible.
+Description: Provides a dataset of physical properties of the chemical elements.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Suggests: knitr
+Depends: R (>= 2.10)
+Suggests: 
+   knitr,
+   dplyr,
+   magrittr,
+   ggplot2,
+   ggprepel,
+   here,
+   httr,
+   readr,
+   rvest,
+   stringr,
+   usethis
 VignetteBuilder: knitr
 RoxygenNote: 6.1.1

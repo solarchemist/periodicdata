@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+vignettes/periodicdata_cache
 vignettes/*.sty
 vignettes/*.aux
 vignettes/*.log

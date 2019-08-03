@@ -1,2 +1,3 @@
+^vignettes/periodicdata_cache$
 ^.*\.Rproj$
 ^\.Rproj\.user$

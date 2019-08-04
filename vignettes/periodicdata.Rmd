@@ -12,11 +12,7 @@ vignette: >
 
 ## Introduction
 
-Mention your own blog posts
-https://chepec.se/2014/11/16/element-data/
-https://chepec.se/2015/01/30/element-properties/
-
-
+In this vignette we will demonstrate how the dataset was collected, by --- *drumroll* --- collecting it! We will also show how you can generate the familiar IUPAC periodic table from our dataset and some simple ggplot2 code.
 
 Periodictable.com provides "up to date, curated data provided by Mathematica's ElementData function from Wolfram Research, Inc." on their website as HTML/CSS tables.
 
@@ -863,6 +859,7 @@ ggplot() +
          legend.key.width = unit(2.5, "line"),
          legend.title = element_blank(),
          legend.background = element_rect(fill = "transparent"))
+ggsave(here("vignettes", "periodictable-ggplot.png"))
 ```
 
 

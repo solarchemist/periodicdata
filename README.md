@@ -59,3 +59,4 @@ And please let me know if you find any errors in the data or the code.
 + [Atomic Weights and Isotopic Compositions with Relative Atomic Masses, NIST Physical Measurement Laboratory](https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-relative-atomic-masses)
 + [Barbalace, K. "Periodic Table of Elements." 2007](https://environmentalchemistry.com/yogi/periodic/)
 + [Atomic Mass Data Center, NUBASE](http://amdc.in2p3.fr/web/nubase_en.html)
++ [Elements in the Human Body and What They Do](https://sciencenotes.org/elements-in-the-human-body-and-what-they-do/)

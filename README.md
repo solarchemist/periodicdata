@@ -8,13 +8,14 @@ Our hope is that this package will make it easier for chemists and others intere
 This package was based on some of my old projects (see Earlier work below).
 But I reworked most of the code in honour of the [#IYPT2019](https://www.iypt2019.org/) and released it as an R package.
 
-![IUPAC periodic table](https://raw.githubusercontent.com/chepec/periodicdata/master/doc/periodictable-ggplot.svg)
+![IUPAC periodic table](https://raw.githubusercontent.com/chepec/periodicdata/master/doc/periodictable-ggplot.png)
 
 
 
 ## So what can this package do?
 
-I direct you to [the vignette](https://htmlpreview.github.io/?https://github.com/chepec/periodicdata/doc/periodicdata.html) and the following blog posts I wrote during the package development process that demonstrate what I have done with it. I hope you will do even more with it!
+Please [have a look at the vignette](https://htmlpreview.github.io/?https://github.com/chepec/periodicdata/blob/master/doc/periodicdata.html).
+You might also like to skim through these blog posts that demonstrate some more examples:
 
 + [Properties of the elements: data collection and ggplot2 tables](https://chepec.se/2014/11/16/element-data/)
 + [All available elemental properties plotted as periodic tables](https://chepec.se/2015/01/30/element-properties/)

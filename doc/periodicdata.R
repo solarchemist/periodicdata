@@ -731,7 +731,7 @@ write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
 ## ---- echo=T, eval=FALSE----------------------------------------------------------
 #  purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
 
-## ---- echo=T, eval=FALSE----------------------------------------------------------
+## ---- echo=T, eval=FALSE, fig.width=9, fig.height=5.25----------------------------
 #  # note that the doc/ directory is only created after running devtools::build_vignettes()
 #  ggsave(filename = here("doc", "periodictable-ggplot.svg"),
 #         plot = p.periodictable_ggplot2)

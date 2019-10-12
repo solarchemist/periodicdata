@@ -884,7 +884,7 @@ purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extda
 
 The following chunk is normally not evaluated. It's only used when I need to refresh the demo periodic table that's included in the README.
 
-```{r, echo=T, eval=FALSE}
+```{r ggsavechunk, echo=T, eval=FALSE, fig.width=9, fig.height=5.25}
 # note that the doc/ directory is only created after running devtools::build_vignettes()
 ggsave(filename = here("doc", "periodictable-ggplot.svg"), 
        plot = p.periodictable_ggplot2)

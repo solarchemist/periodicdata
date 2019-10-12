@@ -1,25 +1,4 @@
----
-title: "Properties of the elements: including data collection and a ggplot2 periodic table"
-author: "Taha Ahmed"
-date: "`r Sys.Date()`"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{Properties of the elements}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-
-## Introduction
-
-In this vignette we will demonstrate how the dataset was collected, by --- *drumroll* --- collecting it! We will also show how you can generate the familiar IUPAC periodic table from our dataset and some simple ggplot2 code.
-
-Periodictable.com provides "up to date, curated data provided by Mathematica's ElementData function from Wolfram Research, Inc." on their website as HTML/CSS tables.
-
-[Wolfram's `ElementData()` function](https://reference.wolfram.com/language/ref/ElementData.html) in turn [lists multiple sources](https://reference.wolfram.com/language/note/ElementDataSourceInformation.html), both scholarly and other websites.
-
-
-```{r packages, echo=T, message=FALSE}
+## ----packages, echo=T, message=FALSE-------------------------------------
 library(dplyr)
 library(magrittr) # extract2()
 library(httr)
@@ -31,10 +10,8 @@ library(usethis)
 library(ggplot2)
 library(ggrepel)
 library(here)
-```
 
-
-```{r global_options, echo=T, message=FALSE}
+## ----global_options, echo=T, message=FALSE----------------------------------------
 options(
    digits   = 7,
    width    = 84,
@@ -56,14 +33,8 @@ opts_chunk$set(
    message    = FALSE,
    warning    = FALSE,
    tidy       = FALSE)
-```
 
-
-
-The [periodictable.com](http://periodictable.com) website lists a large number of properties for each element, and the data is displayed as simple HTML/CSS tables. The website states that it was created with Mathematica (by Wolfram Research), but even so, the quality of the data on the website is actually rather poor. It appears to have suffered from whatever conversion was applied from the original Mathematica format.
-
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 # Starting from this URL, we crawl the page and collect the URLs to all property pages, along with the name of each property.
 # We put them together in a dataframe, so it is clear which URL belongs to which elemental property.
 element_data <- read_html("http://periodictable.com/Elements/001/data.html")
@@ -121,14 +92,8 @@ elemental_properties$sanitized <-
 elemental_properties <- unique(elemental_properties)
 # reset the row numbering
 row.names(elemental_properties) <- seq(1, dim(elemental_properties)[1])
-```
 
-
-## Collect periodic table data from periodictable.com 
-
-Each property, e.g., density, will have a *value* for each element of the periodic table. This value is just a string, and depending on the type of the property, it may be just a number, or a quantity with a unit, or some text with various attributes. At this stage, we don't mind the internal structure of the value, we just want to prepare for collecting them.
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 # get the name of all the elements (two-step process)
 element_names <-
    read_html(elemental_properties$url[1]) %>%
@@ -148,12 +113,8 @@ properties_raw <-
                     extract2(8) %>%
                     html_nodes("td") %>%
                     html_attr("align") == "left"])
-```
 
-
-Some property pages (listed below) are difficult to parse, usually because of bad HTML. For now, we just skip those pages (no big loss).
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 skip_properties <-
    c("Ionization_Energies", # has multiple values per element, plus formatting errors in HTML (cell 1 and 120)
      "NFPA_Label", # replacement has 120 rows, data has 118
@@ -169,12 +130,8 @@ skip_properties <-
 # drop those rows from elemental_properties
 elemental_properties <-
    elemental_properties[-which(elemental_properties$sanitized %in% skip_properties), ]
-```
 
-
-Ok, let's populate our `properties` dataframe with the scraped data.
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 # This chunk does all the scraping of periodictable.com
 # But it tries its best not to do any scraping
 # If you really want to scrape the website and rebuild the entire dataset from scratch (this takes some time!), go ahead and delete the file "inst/extdata/periodicdata-raw.rdata" then run this chunk again.
@@ -233,49 +190,8 @@ if (!file.exists(here("inst", "extdata", "periodicdata-raw.rdata"))) {
 } else {
    load(file = here("inst", "extdata", "periodicdata-raw.rdata"))
 }
-```
 
-At the present time, the following property pages had formatting that deviated from the others, as detected by our logic in the previous chunk:
-
-```
-Reading property page (33 of 81): Ionization Energies
-Detected funky formatting on property page Ionization Energies
-Reading property page (34 of 81): DOT Hazard Class
-Detected funky formatting on property page DOT Hazard Class
-Reading property page (36 of 81): RTECS Number
-Detected funky formatting on property page RTECS Number
-Reading property page (39 of 81): Names of Allotropes
-Detected funky formatting on property page Names of Allotropes
-Reading property page (46 of 81): Discovery
-Detected funky formatting on property page Discovery
-Reading property page (49 of 81): CID Number
-Detected funky formatting on property page CID Number
-Reading property page (69 of 81): Lattice Angles
-Detected funky formatting on property page Lattice Angles
-Reading property page (70 of 81): Lattice Constants
-Detected funky formatting on property page Lattice Constants
-Reading property page (79 of 81): Known Isotopes
-Detected funky formatting on property page Known Isotopes
-Reading property page (80 of 81): Stable Isotopes
-Detected funky formatting on property page Stable Isotopes
-Reading property page (81 of 81): Isotopic Abundances
-Detected funky formatting on property page Isotopic Abundances
-```
-
-
-## Add more properties to the data
-
-If you want to add more properties to the data, that should be done here. Before splitting.
-
-Below we have added the following properties:
-
-+ `Autoignition_Point`. From periodictable.com. Has since been removed from the website.
-+ `Flashpoint`. From periodictable.com. Has since been removed from the website.
-+ `Gmelin_Number`. From periodictable.com. Has since been removed from the website.
-+ `Heat_of_Combustion`. From periodictable.com. Has since been removed from the website.
-
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 property <- 
    structure(data.frame(matrix(c(
       # Name        # Autoignition_Point
@@ -301,10 +217,8 @@ property <-
       byrow = T)),
       .Names = c("Name", "Autoignition_Point"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
-```
 
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 property <- 
    structure(data.frame(matrix(c(
       # Name        # Flashpoint
@@ -318,10 +232,8 @@ property <-
       byrow = T)),
       .Names = c("Name", "Flashpoint"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
-```
 
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 property <- 
    structure(data.frame(matrix(c(
       # Name      # Heat_of_Combustion
@@ -336,10 +248,8 @@ property <-
       byrow = T)),
       .Names = c("Name", "Heat_of_Combustion"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
-```
 
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 property <- 
    structure(data.frame(matrix(c(
       # Name         # Gmelin_Number
@@ -429,21 +339,8 @@ property <-
       byrow = T)),
       .Names = c("Name", "Gmelin_Number"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
-```
 
-
-## Split quantities and units into separate dataframes
-
-We now have several tasks ahead of us before the data is usable:
-
-+ what type of data each property is (character string, dimensionless quantity, or quantity with unit)
-+ determine and identify what part of each property value is a quantity and which is a unit
-+ extract quantity and unit separately from each datapoint and save to `values` and `units` dataframe, respectively
-
-Take care to that the dataframes `values` and `units` have the same dimensions (rows/columns). The point behind splitting each value up is to be able to treat the quantity numerically, plot it, etc. It's therefore crucial that the dataframes stay the same size, so that once a quantity is read from `values`, we can trust that its unit is found in the corresponding cell in `units`.
-
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 # create empty dataframes to hold quantities and units, respectively
 values <- units  <-
    data.frame(matrix(
@@ -453,12 +350,8 @@ values <- units  <-
       byrow = TRUE))
 # The dataset on periodictable.com also has footnotes.
 # These are not saved in the current implementation of `periodicdata`
-```
 
-Next, we list all the currently existing columns so that we can specify a *type* for each one. The type will determine how we handle unit extraction etc.
-
-
-```{r, echo=T}
+## ---- echo=T----------------------------------------------------------------------
 # to re-create the matrix below, get started like this:
 # cat(paste0(names(properties), collapse=",\n"))
 property_types <- 
@@ -539,10 +432,8 @@ property_types <-
       "Heat_of_Combustion","number with unit"), 
       ncol = 2, byrow = T)),
       .Names = c("Data", "Type"))
-```
 
-
-```{r, echo=T, warning=FALSE}
+## ---- echo=T, warning=FALSE-------------------------------------------------------
 # running this loop usually produces warnings "NAs introduced by coercion". We can disregard those.
 for (k in 1:dim(property_types)[1]) {
    # clean up or convert the quantity or unit depending on type of data in each property
@@ -595,27 +486,16 @@ for (k in 1:dim(property_types)[1]) {
       message("This should never happen!")
    }
 }
-```
 
-
-## Cleaning up and normalising the units
-
-Now that we have separated the units and the quantities into separate dataframes, let's have a look at the units, to see what fixing is needed.
-
-
-```{r, echo=TRUE, results='markup'}
+## ---- echo=TRUE, results='markup'-------------------------------------------------
 # Units by property
 sapply(units, unique)
-```
 
-As you can see, some properties (for example HalfLife) use more than one unit. This is problematic, since we will only be plotting against one y-axis, not several. So we will have to convert all such occurrences to their base SI units, which means we have to take the numerical conversion of the quantity into consideration as well. Let's do it.
-
-```{r, echo=TRUE, results='markup'}
+## ---- echo=TRUE, results='markup'-------------------------------------------------
 # All units in the dataset as a simple vector
 cat(paste(sort(unique(unlist(sapply(units, unique)))), collapse = "\n"))
-```
 
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 ## %           (percent)
 ## °C          => K
 ## d           => s (day to second)
@@ -637,10 +517,8 @@ cat(paste(sort(unique(unlist(sapply(units, unique)))), collapse = "\n"))
 ## S/m         (Siemens per metre)
 ## W/(m K)     (Watt per metre-Kelvin)
 ## y           => s (year to second)
-```
 
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 pcf <- 
    structure(data.frame(matrix(c(
       # from      # to        # conversion factor
@@ -659,10 +537,8 @@ pcf <-
       "y",        "s",        "3.154E7"), 
       ncol = 3, byrow = T)),
       .Names = c("pattern", "convert", "factor"))
-```
 
-
-```{r, echo=T}
+## ---- echo=T----------------------------------------------------------------------
 # Replace the units and convert values according to pcf
 for (k in 1:dim(units)[2]) {
    # if the entire column is NA, move to the next one
@@ -697,13 +573,8 @@ for (k in 1:dim(units)[2]) {
       }
    }
 }
-```
 
-
-
-## Proof-of-concept plots and conclusion
-
-```{r Density-vs-AtomicNumber, fig.cap="Density vs atomic number.", warning=FALSE}
+## ----Density-vs-AtomicNumber, fig.cap="Density vs atomic number.", warning=FALSE----
 ggplot() +
    geom_point(data = values %>% filter(!is.na(Density)), 
               aes(Atomic_Number, Density)) +
@@ -722,15 +593,8 @@ ggplot() +
                    unique(units$Density[which(!is.na(units$Density))]),
                    ")")
         )
-```
 
-
-That's not a bad plot, but what if we could use the periodic table (think IUPAC's layout) and plot the data on top of that, for example using varying degrees of fill colour, or some such? Or even to print a typical periodic table by itself, just using the dataset and ggplot (and possibly TikZ, for really nice PDF output).
-To do that, we need a final preparatory step.
-
-The IUPAC periodic table places the elements next to each other, organised in rows (periods) and columns (groups) on a two-dimensional grid. Obviously, each element's position on this plot is completely specified by its group and period.
-
-```{r, echo=TRUE}
+## ---- echo=TRUE-------------------------------------------------------------------
 values$IUPAC_Period <- values$Period %>% as.numeric()
 values$IUPAC_Group <- values$Group %>% as.numeric()
 values$IUPAC_Number <- values$Atomic_Number %>% as.character()
@@ -760,11 +624,8 @@ values[nrow(values) + 1,
 # add corresponding empty rows to units df to maintain the same dimensions:
 units[nrow(units) + 1, ] <- NA
 units[nrow(units) + 1, ] <- NA
-```
 
-By changing the `IUPAC_Period` and `IUPAC_Group` assignments it's possible to adjust the layout of the periodic table according to taste. Here's a reproduction of the IUPAC table of elements:
-
-```{r periodictable-ggplot2, echo=T, warning=F, fig.width=9, fig.height=5.25}
+## ----periodictable-ggplot2, echo=T, warning=F, fig.width=9, fig.height=5.25-------
 p.periodictable_ggplot2 <-
    ggplot() +
    # lanthanoids and actinoids background colour drawn first
@@ -861,39 +722,19 @@ p.periodictable_ggplot2 <-
          legend.title = element_blank(),
          legend.background = element_rect(fill = "transparent"))
 print(p.periodictable_ggplot2)
-```
 
-
-This is just an example of the kind of plot than can be achieved with ggplot2 and this dataset. 
-Note that the plot is quite sensitive to changes to its final output dimension --- such changes may necessitate changes to the `size` parameter in the `geom_point()` layers (these effectively set the size of the box that each element occupies.
-
-With the dataset fully assembled, all that remains is to save the `values` and `units` dataframes.
-These dataframes are part of the exported data of this package.
-
-```{r, echo=T}
+## ---- echo=T----------------------------------------------------------------------
 use_data(values, units, overwrite = TRUE)
 write_csv(values, here("inst", "extdata", "periodicdata-values.csv"))
 write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
-```
 
-Note: the file `inst/extdata/periodicdata-raw.R` is created by knitting *this* Rmd file:
-```{r, echo=T, eval=FALSE}
-purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
-```
+## ---- echo=T, eval=FALSE----------------------------------------------------------
+#  purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
 
-
-The following chunk is normally not evaluated. It's only used when I need to refresh the demo periodic table that's included in the README.
-
-```{r, echo=T, eval=FALSE}
-# note that the doc/ directory is only created after running devtools::build_vignettes()
-ggsave(filename = here("doc", "periodictable-ggplot.svg"), 
-       plot = p.periodictable_ggplot2)
-ggsave(filename = here("doc", "periodictable-ggplot.png"), 
-       plot = p.periodictable_ggplot2)
-```
-
-
-
-
-
+## ---- echo=T, eval=FALSE----------------------------------------------------------
+#  # note that the doc/ directory is only created after running devtools::build_vignettes()
+#  ggsave(filename = here("doc", "periodictable-ggplot.svg"),
+#         plot = p.periodictable_ggplot2)
+#  ggsave(filename = here("doc", "periodictable-ggplot.png"),
+#         plot = p.periodictable_ggplot2)
 

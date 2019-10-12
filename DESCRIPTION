@@ -1,7 +1,7 @@
 Package: periodicdata
 Type: Package
 Title: Properties of the chemical elements
-Version: 0.0.0.9000
+Version: 0.0.0.9001
 Author: Taha Ahmed
 Maintainer: Taha Ahmed <taha@chepec.se>
 Description: Provides a dataset of physical properties of the chemical elements.
@@ -11,6 +11,7 @@ LazyData: true
 Depends: R (>= 2.10)
 Suggests: 
    knitr,
+   rmarkdown,
    dplyr,
    magrittr,
    ggplot2,

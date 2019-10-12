@@ -8,7 +8,17 @@ Our hope is that this package will make it easier for chemists and others intere
 This package was based on some of my old projects (see Earlier work below).
 But I reworked most of the code in honour of the [#IYPT2019](https://www.iypt2019.org/) and released it as an R package.
 
-![IUPAC periodic table](https://raw.githubusercontent.com/chepec/periodicdata/master/vignettes/periodictable-ggplot.png)
+![IUPAC periodic table](https://raw.githubusercontent.com/chepec/periodicdata/master/doc/periodictable-ggplot.svg)
+
+
+
+## So what can this package do?
+
+I direct you to [the vignette](https://htmlpreview.github.io/?https://github.com/chepec/periodicdata/doc/periodicdata.html) and the following blog posts I wrote during the package development process that demonstrate what I have done with it. I hope you will do even more with it!
+
++ [Properties of the elements: data collection and ggplot2 tables](https://chepec.se/2014/11/16/element-data/)
++ [All available elemental properties plotted as periodic tables](https://chepec.se/2015/01/30/element-properties/)
+
 
 
 ## Install this package
@@ -17,8 +27,15 @@ To install this package on your system, I suggest:
 
 ```
 install.packages("devtools")
-library(devtools)
-install_github("chepec/periodicdata")
+devtools::install_github("chepec/periodicdata")
+```
+
+Note that `devtools` [does not build vignettes by default](https://github.com/r-lib/devtools/issues/1896) 
+[when installing packages](https://stackoverflow.com/a/33617870/1198249). 
+To build the vignette when installing this package, replace the last line above with
+
+```
+devtools::install_github("chepec/periodicdata", build_opts = c("--no-resave-data", "--no-manual"), build_vignettes = TRUE)
 ```
 
 
@@ -36,14 +53,6 @@ git clone https://github.com/chepec/periodicdata.git
 If you would like to add to this dataset you're very welcome. Open an issue or a pull request.
 
 And please let me know if you find any errors in the data or the code.
-
-
-
-## Own work in the same vein
-
-+ [Properties of the elements: data collection and ggplot2 tables](https://chepec.se/2014/11/16/element-data/)
-+ [All available elemental properties plotted as periodic tables](https://chepec.se/2015/01/30/element-properties/)
-
 
 
 

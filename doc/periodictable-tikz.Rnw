@@ -1,0 +1,536 @@
+%\VignetteIndexEntry{Periodic Table of the Elements}
+%\VignetteEngine{knitr::knitr}
+%\VignetteKeyword{Periodic table}
+%\VignetteKeyword{IUPAC}
+%\VignetteKeyword{LaTeX}
+%\VignetteKeyword{TikZ}
+
+%% This work was created by Taha Ahmed, 2010
+%% Last updated: 2019-07-30
+%% This work is a derived work.
+%% Original work by Ivan Griffin
+%% http://www.texample.net/tikz/examples/periodic-table-of-chemical-elements/
+%% Layout based on the IUPAC periodic table
+%% https://iupac.org/what-we-do/periodic-table-of-elements/
+
+
+\documentclass{article}
+%%%% A4 page options
+\usepackage[landscape,%
+   a4paper,%
+   noheadfoot,%
+   hmargin={0.125cm,0cm},%
+   vmargin={2cm,0cm}]%
+   {geometry}
+\pagestyle{empty}
+%%%%
+
+\usepackage{tikz}
+\usepackage[tightpage]{preview}
+\usetikzlibrary{shapes,calc,backgrounds}
+
+\newcommand{\CommonElementTextFormat}[4]{%
+   \begin{minipage}{2.2cm}
+      \centering
+      {\textbf{#1} \hfill #2}%
+      \linebreak \linebreak
+      {\textbf{#3}}%
+      \linebreak \linebreak
+      {{#4}}
+   \end{minipage}
+}
+
+\newcommand{\NaturalElementTextFormat}[4]{%
+  \CommonElementTextFormat{#1}{#2}{\LARGE {#3}}{#4}
+}
+
+\newcommand{\OutlineText}[1]{%
+   % Couldn't find a nicer way of doing an outline font with TikZ
+   % other than using pdfliteral 1 Tr
+   \pdfliteral direct {0.5 w 1 Tr}{#1}%
+   \pdfliteral direct {1 w 0 Tr}%
+}
+
+\newcommand{\SyntheticElementTextFormat}[4]{%
+   \CommonElementTextFormat{#1}{#2}{\OutlineText{\LARGE #3}}{#4}
+}
+
+\newlength{\LegendBoxHalfWidth}
+\setlength{\LegendBoxHalfWidth}{0.4em}
+\newlength{\LegendBoxYOffset}
+\setlength{\LegendBoxYOffset}{1.25ex}
+\newlength{\LegendTitleXOffset}
+\setlength{\LegendTitleXOffset}{-1.0em}
+
+% ----------------------------------------------------------------------
+% R SETUP
+% ----------------------------------------------------------------------
+<<'R-setup', echo=F, results='hide', cache=FALSE>>=
+# Note that we are not doing anything with R in this document
+# It's just included so the vignette check in devtools package build does not complain
+options(
+   digits   = 7,
+   width    = 84,
+   continue = "  ",
+   prompt   = "> ",
+   stringsAsFactors = FALSE)
+@
+% ----------------------------------------------------------------------
+
+% ----------------------------------------------------------------------
+% R LOAD PACKAGES
+% ----------------------------------------------------------------------
+<<'load-R-packages', echo=F, results='hide', message=FALSE>>=
+library(periodicdata)
+# packages listed here should also be listed under Suggests in DESCRIPTION
+library(dplyr)
+library(knitr)
+opts_knit$set(
+   self.contained = FALSE,
+   child.path = '')
+opts_chunk$set(
+   cache = FALSE,
+   size = 'footnotesize',
+   echo = FALSE,
+   eval = TRUE,
+   results = 'hide',
+   message = FALSE,
+   tidy = FALSE)
+@
+% ----------------------------------------------------------------------
+
+\begin{document}
+\begin{preview}
+%% Scale factor 0.56 fits snugly into a landscape A4 paper
+\begin{tikzpicture}[font=\sffamily, scale=0.56, transform shape]
+
+%% Fill Color Styles
+   \tikzstyle{ElementFill} = [fill=yellow!15]
+   \tikzstyle{AlkaliMetalFill} = [fill=blue!55]
+   \tikzstyle{AlkalineEarthMetalFill} = [fill=blue!40]
+   \tikzstyle{MetalFill} = [fill=blue!25]
+   \tikzstyle{MetalloidFill} = [fill=orange!25]
+   \tikzstyle{NonmetalFill} = [fill=green!25]
+   \tikzstyle{HalogenFill} = [fill=green!40]
+   \tikzstyle{NobleGasFill} = [fill=green!55]
+   \tikzstyle{LanthanideActinideFill} = [fill=purple!25]
+
+%% Element Styles
+   \tikzstyle{Element} = [draw=black, ElementFill,
+      minimum width=2.75cm, minimum height=2.75cm, node distance=2.75cm]
+   \tikzstyle{Alkali Metal} = [Element, AlkaliMetalFill]
+   \tikzstyle{Alkaline Earth Metal} = [Element, AlkalineEarthMetalFill]
+   \tikzstyle{Transition Metal} = [Element, MetalFill]
+   \tikzstyle{Metal} = [Element, MetalFill]
+   \tikzstyle{Poor Metal} = [Element, MetalFill]
+   \tikzstyle{Metalloid} = [Element, MetalloidFill]
+   \tikzstyle{Nonmetal} = [Element, NonmetalFill]
+   \tikzstyle{Chalcogen} = [Element, MetalloidFill]
+   \tikzstyle{Halogen} = [Element, HalogenFill]
+   \tikzstyle{NobleGas} = [Element, NobleGasFill]
+   \tikzstyle{Noble Gas} = [Element, NobleGasFill]
+   \tikzstyle{LanthanideActinide} = [Element, LanthanideActinideFill]
+   \tikzstyle{Lanthanide} = [Element, LanthanideActinideFill]
+   \tikzstyle{Actinide} = [Element, LanthanideActinideFill]
+   \tikzstyle{PeriodLabel} = [font={\sffamily\LARGE}, node distance=2.0cm]
+   \tikzstyle{GroupLabel} = [font={\sffamily\LARGE}, minimum width=2.75cm, node distance=2.0cm]
+   \tikzstyle{TitleLabel} = [font={\sffamily\Huge\bfseries}]
+
+%% Group 1 - IA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "1")
+cat(paste0("\\node[name=", this$Symbol,
+       # this construct makes sure we always refer to the element above in the group
+       # head(x, -1) removes the last element of a vector
+       c("", paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       # the following row: {Atomic_Number}{Atomic_Weight}{Symbol}{Name}
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[2]
+@
+
+
+%% Group 2 - IIA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "2")
+cat(paste0("\\node[name=", this$Symbol,
+       # this construct makes sure we always refer to the element above in the group
+       # head(x, -1) removes the last element of a vector
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[3]
+@
+
+
+%% Group 3 - IIIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(IUPAC_Group == "3")
+cat(paste0("\\node[name=", this$Name,
+       # this construct makes sure we always refer to the element above in the group
+       # head(x, -1) removes the last element of a vector
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Name, -1))), ", ",
+       this$IUPAC_Series, "] {",
+       "\\NaturalElementTextFormat",
+       # we make special consideration so NAs are not printed
+       "{", this$IUPAC_Number, "}{",
+       ifelse(is.na(this$Atomic_Weight), "", this$Atomic_Weight), "}{",
+       ifelse(is.na(this$Symbol), "", this$Symbol), "}{", this$Name, "}};\n"))
+this.rightof <- this$Name[1]
+@
+
+
+%% Group 4 - IVB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "4")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 5 - VB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "5")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 6 - VIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "6")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 7 - VIIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "7")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 8 - VIIIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "8")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 9 - VIIIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "9")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 10 - VIIIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "10")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 11 - IB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "11")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 12 - IIB
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "12")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 13 - IIIA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "13") %>% arrange(factor(Period, levels = c(4:2,5:7)))
+cat(paste0("\\node[name=", this$Symbol,
+       # note: order is important here, the element above of or right of needs to exist first
+       c(paste0(", right of=", this.rightof),   # Ga to the right of Zn
+         paste0(", above of=", this$Symbol[1]), # Al above of Ga
+         paste0(", above of=", this$Symbol[2]), # B above of Al
+         paste0(", below of=", this$Symbol[c(1,4,5)])), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[which(this$Period == 2)]
+@
+
+
+%% Group 14 - IVA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "14")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 15 - VA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "15")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 16 - VIA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "16")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$IUPAC_Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 17 - VIIA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "17")
+cat(paste0("\\node[name=", this$Symbol,
+       c(paste0(", right of=", this.rightof),
+         paste0(", below of=", head(this$Symbol, -1))), ", ",
+       this$IUPAC_Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Group 18 - VIIIA
+<<echo=F, results='asis'>>=
+this <- values %>% filter(Group == "18") %>% arrange(factor(Period, levels = c(2,1,3:7)))
+cat(paste0("\\node[name=", this$Symbol,
+       # note: order is important here, the element above of or right of needs to exist first
+       c(paste0(", right of=", this.rightof),   # Ne to the right of F
+         paste0(", above of=", this$Symbol[1]), # He above of Ne
+         paste0(", below of=", this$Symbol[c(1,3:6)])), ", ",
+       this$Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+@
+
+
+%% Period labels
+<<echo=F, results='asis'>>=
+periods <- values %>% filter(!is.na(Period)) %>% pull(Period) %>% unique() %>% as.numeric()
+for (p in 1:max(periods)) {
+   cat(paste0("\\node[name=Period", p, ", ",
+              "left of=", values %>% filter(Period == p) %>% filter(Group == 1) %>% pull(Symbol), ", ",
+              "PeriodLabel] {", p, "};\n"))
+}
+@
+
+
+% this chunk would be harder to print using R, I think. Let it be for now.
+%% Group
+   \node[name=Group1, above of=H, GroupLabel]        {1 \hfill IA};
+   \node[name=Group2, above of=Be, GroupLabel]       {2 \hfill IIA};
+   \node[name=Group3, above of=Scandium, GroupLabel] {3 \hfill IIIA};
+   \node[name=Group4, above of=Ti, GroupLabel]       {4 \hfill IVB};
+   \node[name=Group5, above of=V, GroupLabel]        {5 \hfill VB};
+   \node[name=Group6, above of=Cr, GroupLabel]       {6 \hfill VIB};
+   \node[name=Group7, above of=Mn, GroupLabel]       {7 \hfill VIIB};
+   \node[name=Group8, above of=Fe, GroupLabel]       {8 \hfill VIIIB};
+   \node[name=Group9, above of=Co, GroupLabel]       {9 \hfill VIIIB};
+   \node[name=Group10, above of=Ni, GroupLabel]      {10 \hfill VIIIB};
+   \node[name=Group11, above of=Cu, GroupLabel]      {11 \hfill IB};
+   \node[name=Group12, above of=Zn, GroupLabel]      {12 \hfill IIB};
+   \node[name=Group13, above of=B, GroupLabel]       {13 \hfill IIIA};
+   \node[name=Group14, above of=C, GroupLabel]       {14 \hfill IVA};
+   \node[name=Group15, above of=N, GroupLabel]       {15 \hfill VA};
+   \node[name=Group16, above of=O, GroupLabel]       {16 \hfill VIA};
+   \node[name=Group17, above of=F, GroupLabel]       {17 \hfill VIIA};
+   \node[name=Group18, above of=He, GroupLabel]      {18 \hfill VIIIA};
+
+
+%% Lanthanoids
+<<echo=F, results='asis'>>=
+this <- values %>% filter(IUPAC_Series == "Lanthanide") %>% filter(!is.na(Atomic_Number))
+cat(paste0("\\node[name=", this$Symbol,
+       # place the first lanthanide below Rutherfordium
+       c(", below of=Rf, yshift=-1.4cm",
+         paste0(", right of=", head(this$Symbol, -1))), ", ",
+       this$IUPAC_Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+this.rightof <- this$Symbol[1]
+@
+
+
+%% Actinoids
+<<echo=F, results='asis'>>=
+this <- values %>% filter(IUPAC_Series == "Actinide") %>% filter(!is.na(Atomic_Number))
+cat(paste0("\\node[name=", this$Symbol,
+       # place the first actinide below La
+       c(paste0(", below of=", this.rightof),
+         paste0(", right of=", head(this$Symbol, -1))), ", ",
+       this$IUPAC_Series, "] {",
+       ifelse(is.infinite(this$Lifetime),
+              "\\NaturalElementTextFormat",
+              "\\SyntheticElementTextFormat"),
+       "{", this$Atomic_Number, "}{", this$Atomic_Weight, "}{", this$Symbol, "}{", this$Name, "}};\n"))
+@
+
+
+%% Draw dashed lines connecting Lanthanide breakout to main table
+   \draw (actinoids.south west) edge[dashed] (La.north west)
+      (actinoids.south east) edge[dashed] (La.north east);
+
+%% Legend
+   \node at ($(H.north -| Ti.west) + (0em,0em)$)
+      [name=elementLegend, Element, fill=white]
+      {\NaturalElementTextFormat{Z}{mass}{Symbol}{Name}};
+   \node[Element, fill=white, below of=elementLegend, yshift=-1em]
+      {\SyntheticElementTextFormat{}{}{man-made}{}};
+
+   \node[name=AlkaliMetalLegend, anchor=north, black, AlkaliMetalFill,
+      inner sep=\LegendBoxHalfWidth, rectangle, draw]
+      at ($(elementLegend.north east) + (3em,0em)$) {};
+   \node[right of=AlkaliMetalLegend, anchor=west, xshift=\LegendTitleXOffset]
+      {Alkali metal};
+
+   \node[name=AlkalineEarthMetalLegend, below of=AlkaliMetalLegend, yshift=1ex,
+      black, AlkalineEarthMetalFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=AlkalineEarthMetalLegend, anchor=west, xshift=\LegendTitleXOffset]
+      {Alkaline earth metal};
+   \node[name=MetalLegend, below of=AlkalineEarthMetalLegend, yshift=\LegendBoxYOffset,
+      black, MetalFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=MetalLegend, anchor=west, xshift=\LegendTitleXOffset] {Metal};
+   \node[name=MetalloidLegend, below of=MetalLegend, yshift=\LegendBoxYOffset,
+      black, MetalloidFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=MetalloidLegend, anchor=west, xshift=\LegendTitleXOffset] {Metalloid};
+   \node[name=NonmetalLegend, below of=MetalloidLegend, yshift=\LegendBoxYOffset,
+      black, NonmetalFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=NonmetalLegend, anchor=west, xshift=\LegendTitleXOffset] {Non-metal};
+   \node[name=HalogenLegend, below of=NonmetalLegend, yshift=\LegendBoxYOffset,
+      black, HalogenFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=HalogenLegend, anchor=west, xshift=\LegendTitleXOffset] {Halogen};
+   \node[name=NobleGasLegend, below of=HalogenLegend, yshift=\LegendBoxYOffset,
+      black, NobleGasFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=NobleGasLegend, anchor=west, xshift=\LegendTitleXOffset] {Noble gas};
+   \node[name=LanthanideActinideLegend, below of=NobleGasLegend, yshift=\LegendBoxYOffset,
+      black, LanthanideActinideFill, inner sep=\LegendBoxHalfWidth, rectangle, draw] {};
+   \node[right of=LanthanideActinideLegend, anchor=west, xshift=\LegendTitleXOffset]
+      {Lanthanoids/Actinoids};
+
+%% Diagram Title
+   \node at (Co.north east) [name=diagramTitle, TitleLabel, yshift=30em]
+   {Periodic Table of the Elements};
+
+   \begin{pgfonlayer}{background}
+   \path[fill=white] (current bounding box.south west)
+   rectangle (current bounding box.north east);
+   \end{pgfonlayer}
+
+\end{tikzpicture}
+\end{preview}
+\end{document}

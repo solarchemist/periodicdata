@@ -9,3 +9,4 @@ vignettes/*.fdb*
 vignettes/*.fls
 vignettes/*.log
 Meta
+!doc

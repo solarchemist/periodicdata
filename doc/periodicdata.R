@@ -463,7 +463,7 @@ for (k in 1:dim(property_types)[1]) {
          # replace ×10 with proper power notation
          gsub("×10", "E", x = .) %>%
          # extract the numeric quantity (including the string "Inf")
-         str_extract("Inf|[-×\\.0-9]+") %>%
+         str_extract("Inf|[-×\\.0-9E]+") %>%
          # final step, make sure this column is numeric
          as.numeric()
       units[, which(names(units) == property_types$Data[k])] <- 
@@ -477,7 +477,7 @@ for (k in 1:dim(property_types)[1]) {
          gsub("\\([.0-9]+\\s[A-Za-z]+\\)", "", x = .) %>%
          # remove the numeric quantity (including the string "Inf")
          # take care not to use gsub here, since numbers could also be part of the unit (e.g., "g/cm3")
-         sub("Inf|[-×\\.0-9]+", "", x = .) %>%
+         sub("Inf|[-×\\.0-9E]+", "", x = .) %>%
          # remove any leading and trailing whitespace
          str_trim(side="both") %>%
          # replace empty string with NA
@@ -686,7 +686,7 @@ p.periodictable_ggplot2 <-
              colour = "black",
              aes(label = x, x = x, y = y)) +
    # table title # position manually adjusted
-   annotate("text", 
+   annotate("text",
             x = 9, y = 0.6, vjust = 0,
             size = 4.5,
             fontface = "bold",
@@ -724,6 +724,7 @@ p.periodictable_ggplot2 <-
 print(p.periodictable_ggplot2)
 
 ## ---- echo=T----------------------------------------------------------------------
+# use_data() saves each dataframe to `data/` as an *.rda file
 use_data(values, units, overwrite = TRUE)
 write_csv(values, here("inst", "extdata", "periodicdata-values.csv"))
 write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
@@ -731,7 +732,7 @@ write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
 ## ---- echo=T, eval=FALSE----------------------------------------------------------
 #  purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
 
-## ---- echo=T, eval=FALSE, fig.width=9, fig.height=5.25----------------------------
+## ----ggsavechunk, echo=T, eval=FALSE, fig.width=9, fig.height=5.25----------------
 #  # note that the doc/ directory is only created after running devtools::build_vignettes()
 #  ggsave(filename = here("doc", "periodictable-ggplot.svg"),
 #         plot = p.periodictable_ggplot2)

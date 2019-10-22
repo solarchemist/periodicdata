@@ -1,16 +1,16 @@
 ## ----packages, echo=T, message=FALSE-------------------------------------
 library(dplyr)
-library(XML)
+library(magrittr) # extract2()
 library(httr)
 library(rvest)
-library(magrittr)
 library(stringr)
 library(readr)
 library(knitr)
+library(usethis)
 library(ggplot2)
 library(ggrepel)
 library(here)
-library(common)
+
 
 ## ----global_options, echo=T, message=FALSE-------------------------------
 options(
@@ -21,6 +21,11 @@ options(
    warn = 0,
    stringsAsFactors = FALSE)
 opts_chunk$set(
+   dev        = 'svg',
+   #out.width  = "100%",
+	fig.width  = 7.10,
+	fig.height = 4.39,
+   fig.align  = 'center',
    echo       = FALSE,
    eval       = TRUE,
    cache      = TRUE,
@@ -29,6 +34,7 @@ opts_chunk$set(
    message    = FALSE,
    warning    = FALSE,
    tidy       = FALSE)
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 # Starting from this URL, we crawl the page and collect the URLs to all property pages, along with the name of each property.
@@ -89,6 +95,7 @@ elemental_properties <- unique(elemental_properties)
 # reset the row numbering
 row.names(elemental_properties) <- seq(1, dim(elemental_properties)[1])
 
+
 ## ---- echo=TRUE----------------------------------------------------------
 # get the name of all the elements (two-step process)
 element_names <-
@@ -110,6 +117,7 @@ properties_raw <-
                     html_nodes("td") %>%
                     html_attr("align") == "left"])
 
+
 ## ---- echo=TRUE----------------------------------------------------------
 skip_properties <-
    c("Ionization_Energies", # has multiple values per element, plus formatting errors in HTML (cell 1 and 120)
@@ -127,11 +135,12 @@ skip_properties <-
 elemental_properties <-
    elemental_properties[-which(elemental_properties$sanitized %in% skip_properties), ]
 
+
 ## ---- echo=TRUE----------------------------------------------------------
 # This chunk does all the scraping of periodictable.com
 # But it tries its best not to do any scraping
-# If you really want to scrape the website and rebuild the entire dataset from scratch (this takes some time!), go ahead and delete the file "data-raw/periodicdata-raw.rdata" then run this chunk again.
-if (!file.exists(here("data-raw", "periodicdata-raw.rdata"))) {
+# If you really want to scrape the website and rebuild the entire dataset from scratch (this takes some time!), go ahead and delete the file "inst/extdata/periodicdata-raw.rdata" then run this chunk again.
+if (!file.exists(here("inst", "extdata", "periodicdata-raw.rdata"))) {
    for (k in 2:length(elemental_properties$property)) {
       message(paste0("Reading property page (", k, " of ", length(elemental_properties$property), "): ",
                      elemental_properties$property[k]))
@@ -181,11 +190,12 @@ if (!file.exists(here("data-raw", "periodicdata-raw.rdata"))) {
    properties_raw <- properties_raw %>% arrange(as.numeric(Atomic_Number))
    # save this dataframe to file
    # (it is not large, but re-scraping the contents takes time)
-   save(properties_raw, file = here("data-raw", "periodicdata-raw.rdata"))
-   write_csv(properties_raw, here("data-raw", "periodicdata-raw.csv"))
+   save(properties_raw, file = here("inst", "extdata", "periodicdata-raw.rdata"))
+   write_csv(properties_raw, here("inst", "extdata", "periodicdata-raw.csv"))
 } else {
-   load(file = here("data-raw", "periodicdata-raw.rdata"))
+   load(file = here("inst", "extdata", "periodicdata-raw.rdata"))
 }
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 property <- 
@@ -214,6 +224,7 @@ property <-
       .Names = c("Name", "Autoignition_Point"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
 
+
 ## ---- echo=TRUE----------------------------------------------------------
 property <- 
    structure(data.frame(matrix(c(
@@ -228,6 +239,7 @@ property <-
       byrow = T)),
       .Names = c("Name", "Flashpoint"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 property <- 
@@ -244,6 +256,7 @@ property <-
       byrow = T)),
       .Names = c("Name", "Heat_of_Combustion"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 property <- 
@@ -336,6 +349,7 @@ property <-
       .Names = c("Name", "Gmelin_Number"))
 properties_raw <- left_join(properties_raw, property, by = "Name")
 
+
 ## ---- echo=TRUE----------------------------------------------------------
 # create empty dataframes to hold quantities and units, respectively
 values <- units  <-
@@ -346,6 +360,7 @@ values <- units  <-
       byrow = TRUE))
 # The dataset on periodictable.com also has footnotes.
 # These are not saved in the current implementation of `periodicdata`
+
 
 ## ---- echo=T-------------------------------------------------------------
 # to re-create the matrix below, get started like this:
@@ -429,6 +444,7 @@ property_types <-
       ncol = 2, byrow = T)),
       .Names = c("Data", "Type"))
 
+
 ## ---- echo=T, warning=FALSE----------------------------------------------
 # running this loop usually produces warnings "NAs introduced by coercion". We can disregard those.
 for (k in 1:dim(property_types)[1]) {
@@ -459,7 +475,7 @@ for (k in 1:dim(property_types)[1]) {
          # replace ×10 with proper power notation
          gsub("×10", "E", x = .) %>%
          # extract the numeric quantity (including the string "Inf")
-         str_extract("Inf|[-×\\.0-9]+") %>%
+         str_extract("Inf|[-×\\.0-9E]+") %>%
          # final step, make sure this column is numeric
          as.numeric()
       units[, which(names(units) == property_types$Data[k])] <- 
@@ -473,7 +489,7 @@ for (k in 1:dim(property_types)[1]) {
          gsub("\\([.0-9]+\\s[A-Za-z]+\\)", "", x = .) %>%
          # remove the numeric quantity (including the string "Inf")
          # take care not to use gsub here, since numbers could also be part of the unit (e.g., "g/cm3")
-         sub("Inf|[-×\\.0-9]+", "", x = .) %>%
+         sub("Inf|[-×\\.0-9E]+", "", x = .) %>%
          # remove any leading and trailing whitespace
          str_trim(side="both") %>%
          # replace empty string with NA
@@ -483,13 +499,16 @@ for (k in 1:dim(property_types)[1]) {
    }
 }
 
+
 ## ---- echo=TRUE, results='markup'----------------------------------------
 # Units by property
 sapply(units, unique)
 
+
 ## ---- echo=TRUE, results='markup'----------------------------------------
 # All units in the dataset as a simple vector
 cat(paste(sort(unique(unlist(sapply(units, unique)))), collapse = "\n"))
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 ## %           (percent)
@@ -505,7 +524,7 @@ cat(paste(sort(unique(unlist(sapply(units, unique)))), collapse = "\n"))
 ## K-1         (per Kelvin)
 ## kJ/mol      (kilojoule per mol)
 ## m           => s (only exists in HalfLife and Lifetime property, so this is minutes not metres)
-## m Ω         => Ωm (electrical resistivity, Ohm-metre)
+## m Ω         => Ohm m (electrical resistivity, Ohm metre) # avoid Ω, causes non-ASCII char warning on package build
 ## m/s         (metre per second)
 ## MPa         => Pa
 ## ms          => s (millisecond to second)
@@ -513,6 +532,7 @@ cat(paste(sort(unique(unlist(sapply(units, unique)))), collapse = "\n"))
 ## S/m         (Siemens per metre)
 ## W/(m K)     (Watt per metre-Kelvin)
 ## y           => s (year to second)
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 pcf <- 
@@ -526,13 +546,14 @@ pcf <-
       "h",        "s",        "3600",
       "J/(Kg K)", "J/(kg K)", "1",
       "m",        "s",        "60", # minutes to seconds
-      "m Ω",      "Ωm",       "1",
+      "m Ω",      "Ohm m",    "1",
       "MPa",      "Pa",       "1E6",
       "ms",       "s",        "1E-3",
       "pm",       "m",        "1E-12", # be careful that this substitution doesn't precede "mins to secs"
       "y",        "s",        "3.154E7"), 
       ncol = 3, byrow = T)),
       .Names = c("pattern", "convert", "factor"))
+
 
 ## ---- echo=T-------------------------------------------------------------
 # Replace the units and convert values according to pcf
@@ -570,14 +591,17 @@ for (k in 1:dim(units)[2]) {
    }
 }
 
+
 ## ----Density-vs-AtomicNumber, fig.cap="Density vs atomic number.", warning=FALSE----
 ggplot() +
-   geom_point(data = values, aes(Atomic_Number, Density)) +
-   geom_path(data = values, aes(Atomic_Number, Density)) +
-   geom_point(data = values %>% filter(Group == "18"),
+   geom_point(data = values %>% filter(!is.na(Density)), 
+              aes(Atomic_Number, Density)) +
+   geom_path(data = values %>% filter(!is.na(Density)), 
+             aes(Atomic_Number, Density)) +
+   geom_point(data = values %>% filter(!is.na(Density)) %>% filter(Group == "18"),
               aes(Atomic_Number, Density),
               colour = "red") +
-   geom_text_repel(data = values %>% filter(Group == "18"),
+   geom_text_repel(data = values %>% filter(!is.na(Density)) %>% filter(Group == "18"),
                    aes(Atomic_Number, Density, label = Symbol),
                    colour = "red") +
    scale_y_log10() +
@@ -587,6 +611,7 @@ ggplot() +
                    unique(units$Density[which(!is.na(units$Density))]),
                    ")")
         )
+
 
 ## ---- echo=TRUE----------------------------------------------------------
 values$IUPAC_Period <- values$Period %>% as.numeric()
@@ -619,9 +644,11 @@ values[nrow(values) + 1,
 units[nrow(units) + 1, ] <- NA
 units[nrow(units) + 1, ] <- NA
 
-## ----periodictable-ggplot2, echo=F, warning=F, fig.width=9, fig.height=5.25----
-ggplot() +
-   # lanthanoids and actinoids drawn separately, so we can give them background colour
+
+## ----periodictable-ggplot2, echo=T, warning=F, fig.width=9, fig.height=5.25----
+p.periodictable_ggplot2 <-
+   ggplot() +
+   # lanthanoids and actinoids background colour drawn first
    geom_point(data = values %>% filter(IUPAC_Series == "Lanthanide"),
               size = 16,
               shape = 15,
@@ -632,9 +659,9 @@ ggplot() +
               shape = 15,
               colour = "#a58394",
               aes(y = IUPAC_Period, x = IUPAC_Group)) +
-   # all elements
+   # boxes for all elements
    geom_point(data = values,
-              # size 16 makes makes the box edges touch each other using fig.width = 9, fig.height = 5.25
+              # size 16 leaves no gaps between the element boxes at fig.width=9,fig.height=5.25
               size = 16,
               shape = 0,
               aes(y = IUPAC_Period,
@@ -679,7 +706,7 @@ ggplot() +
              colour = "black",
              aes(label = x, x = x, y = y)) +
    # table title # position manually adjusted
-   annotate("text", 
+   annotate("text",
             x = 9, y = 0.6, vjust = 0,
             size = 4.5,
             fontface = "bold",
@@ -714,12 +741,23 @@ ggplot() +
          legend.key.width = unit(2.5, "line"),
          legend.title = element_blank(),
          legend.background = element_rect(fill = "transparent"))
+print(p.periodictable_ggplot2)
+
 
 ## ---- echo=T-------------------------------------------------------------
-usethis::use_data(values, units, overwrite = TRUE)
+use_data(values, units, overwrite = TRUE)
 write_csv(values, here("inst", "extdata", "periodicdata-values.csv"))
 write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
 
-## ---- echo=T, eval=T-----------------------------------------------------
-purl(input = here("vignettes", "periodicdata.Rmd"), output = here("data-raw", "periodicdata-raw.R"))
+
+## ---- echo=T, eval=FALSE-------------------------------------------------
+## purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
+
+
+## ----ggsavechunk, echo=T, eval=T, fig.width=9, fig.height=5.25-----------
+# note that the doc/ directory is only created after running devtools::build_vignettes()
+ggsave(filename = here("doc", "periodictable-ggplot.svg"), 
+       plot = p.periodictable_ggplot2)
+ggsave(filename = here("doc", "periodictable-ggplot.png"), 
+       plot = p.periodictable_ggplot2)
 

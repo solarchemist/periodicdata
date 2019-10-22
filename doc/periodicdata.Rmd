@@ -172,7 +172,7 @@ elemental_properties <-
 ```
 
 
-Ok, let's populate our `properties` dataframe with the scraped data.
+Ok, let's populate our `properties` dataframe with some scraped data.
 
 ```{r, echo=TRUE}
 # This chunk does all the scraping of periodictable.com
@@ -572,7 +572,7 @@ for (k in 1:dim(property_types)[1]) {
          # replace ×10 with proper power notation
          gsub("×10", "E", x = .) %>%
          # extract the numeric quantity (including the string "Inf")
-         str_extract("Inf|[-×\\.0-9]+") %>%
+         str_extract("Inf|[-×\\.0-9E]+") %>%
          # final step, make sure this column is numeric
          as.numeric()
       units[, which(names(units) == property_types$Data[k])] <- 
@@ -586,7 +586,7 @@ for (k in 1:dim(property_types)[1]) {
          gsub("\\([.0-9]+\\s[A-Za-z]+\\)", "", x = .) %>%
          # remove the numeric quantity (including the string "Inf")
          # take care not to use gsub here, since numbers could also be part of the unit (e.g., "g/cm3")
-         sub("Inf|[-×\\.0-9]+", "", x = .) %>%
+         sub("Inf|[-×\\.0-9E]+", "", x = .) %>%
          # remove any leading and trailing whitespace
          str_trim(side="both") %>%
          # replace empty string with NA
@@ -825,7 +825,7 @@ p.periodictable_ggplot2 <-
              colour = "black",
              aes(label = x, x = x, y = y)) +
    # table title # position manually adjusted
-   annotate("text", 
+   annotate("text",
             x = 9, y = 0.6, vjust = 0,
             size = 4.5,
             fontface = "bold",
@@ -871,6 +871,7 @@ With the dataset fully assembled, all that remains is to save the `values` and `
 These dataframes are part of the exported data of this package.
 
 ```{r, echo=T}
+# use_data() saves each dataframe to `data/` as an *.rda file
 use_data(values, units, overwrite = TRUE)
 write_csv(values, here("inst", "extdata", "periodicdata-values.csv"))
 write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
@@ -884,7 +885,7 @@ purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extda
 
 The following chunk is normally not evaluated. It's only used when I need to refresh the demo periodic table that's included in the README.
 
-```{r, echo=T, eval=FALSE, fig.width=9, fig.height=5.25}
+```{r ggsavechunk, echo=T, eval=FALSE, fig.width=9, fig.height=5.25}
 # note that the doc/ directory is only created after running devtools::build_vignettes()
 ggsave(filename = here("doc", "periodictable-ggplot.svg"), 
        plot = p.periodictable_ggplot2)

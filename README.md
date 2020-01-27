@@ -104,7 +104,7 @@ Below follows a short description of each property. Source is only noted if othe
 | ---                            | --- | 
 | Name                           |  |
 | Symbol                         |  |
-| Atomic_Number                  | [^atomicnumber] |
+| Atomic_Number                  | [Atomic_number (Wikipedia)](https://en.wikipedia.org/wiki/Atomic_number) |
 | Atomic_Weight                  | given for the longest lived isotope  |
 | Density                        |  |
 | Melting_Point                  |  |
@@ -118,7 +118,7 @@ Below follows a short description of each property. Source is only noted if othe
 | Heat_of_Vaporization           |  |
 | Specific_Heat                  |  |
 | Adiabatic_Index                |  |
-| Neel_Point                     | [antiferromagnetic elements](https://en.wikipedia.org/wiki/N%C3%A9el_temperature) |
+| Neel_Point                     | [Neel temperature (Wikipedia)](https://en.wikipedia.org/wiki/N%C3%A9el_temperature) |
 | Thermal_Conductivity           |  |
 | Thermal_Expansion              |  |
 | Density_Liquid                 |  |
@@ -135,7 +135,7 @@ Below follows a short description of each property. Source is only noted if othe
 | Valence                        |  |
 | Electronegativity              | [Electronegativity by Pauling scale](https://en.wikipedia.org/wiki/Electronegativity) |
 | ElectronAffinity               | [Wiki article](https://en.wikipedia.org/wiki/Electron_affinity), [Wiki data page](https://en.wikipedia.org/wiki/Electron_affinity_(data_page)) |
-| DOT_Hazard_Class               | US DOT Hazard class[^dothazardclass] |
+| DOT_Hazard_Class               | [US DOT Hazard class (Wikipedia)](https://en.wikipedia.org/wiki/Dangerous_goods#United_States) |
 | DOT_Numbers                    | US DOT number |
 | RTECS_Number                   | [Registry of Toxic Effects of Chemical Substances](https://en.wikipedia.org/wiki/Registry_of_Toxic_Effects_of_Chemical_Substances) |
 | Alternate_Names                |  |
@@ -146,14 +146,14 @@ Below follows a short description of each property. Source is only noted if othe
 | Electron_Configuration         |  |
 | Color                          |  |
 | Gas_phase                      | Mono- or diatomic gas in its natural state |
-| CAS_Number                     | [CAS registry number](https://en.wikipedia.org/wiki/CAS_Registry_Number) |
+| CAS_Number                     | [CAS registry number (Wikipedia)](https://en.wikipedia.org/wiki/CAS_Registry_Number) |
 | CID_Number                     | Compound identification number (PubChem?) |
 | Electrical_Type                |  |
 | Electrical_Conductivity        |  |
 | Resistivity                    |  |
 | Superconducting_Point          |  |
 | Magnetic_Type                  |  |
-| Curie_Point                    | [temperature above which permanent magnetic property is lost](https://en.wikipedia.org/wiki/Curie_temperature) |
+| Curie_Point                    | [Curie temperature (Wikipedia)](https://en.wikipedia.org/wiki/Curie_temperature) |
 | Mass_Magnetic_Susceptibility   |  |
 | Molar_Magnetic_Susceptibility  |  |
 | Volume_Magnetic_Susceptibility |  |
@@ -163,8 +163,8 @@ Below follows a short description of each property. Source is only noted if othe
 | Percent_in_Earths_Crust        |  |
 | Percent_in_Oceans              |  |
 | Percent_in_Humans              |  |
-| Atomic_Radius                  | corresponds well to radii computed from theoretical models by Clementi et al.[^Clementi1967] |
-| Covalent_Radius                | not sure what source periodictable.com got this property from...[^atomicradius] |
+| Atomic_Radius                  | corresponds well to radii computed from theoretical models by [Clementi et al.](https://doi.org/10.1063%2F1.1712084) |
+| Covalent_Radius                | not sure what source periodictable.com got this property from... [Atomic radius (Wikipedia)](https://en.wikipedia.org/wiki/Atomic_radius) |
 | Van_der_Waals_Radius           | correspond to published vdW radii in literature |
 | Space_Group_Name               |  |
 | Space_Group_Number             |  |
@@ -183,7 +183,3 @@ Below follows a short description of each property. Source is only noted if othe
 | IUPAC_Number                   | atomic numbers as shown in IUPAC-style table |
 | IUPAC_Series                   |  |
 
-[^atomicnumber]: [https://en.wikipedia.org/wiki/Atomic_number](https://en.wikipedia.org/wiki/Atomic_number)
-[^dothazardclass]: [https://en.wikipedia.org/wiki/Dangerous_goods#United_States](https://en.wikipedia.org/wiki/Dangerous_goods#United_States)
-[^Clementi1967]:  [Clementi, E.; Raimond, D. L.; Reinhardt, W. P. (1967). "Atomic Screening Constants from SCF Functions. II. Atoms with 37 to 86 Electrons". Journal of Chemical Physics. 47 (4): 1300–1307](https://doi.org/10.1063%2F1.1712084)
-[^atomicradius]: [https://en.wikipedia.org/wiki/Atomic_radius](https://en.wikipedia.org/wiki/Atomic_radius)

@@ -1,4 +1,4 @@
-## ----packages, echo=T, message=FALSE-------------------------------------
+## ----packages, echo=T, message=FALSE------------------------------------------
 library(dplyr)
 library(magrittr) # extract2()
 library(httr)

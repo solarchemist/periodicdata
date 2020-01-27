@@ -887,10 +887,13 @@ The following chunk is normally not evaluated. It's only used when I need to ref
 
 ```{r ggsavechunk, echo=T, eval=FALSE, fig.width=9, fig.height=5.25}
 # note that the doc/ directory is only created after running devtools::build_vignettes()
-ggsave(filename = here("doc", "periodictable-ggplot.svg"), 
-       plot = p.periodictable_ggplot2)
 ggsave(filename = here("doc", "periodictable-ggplot.png"), 
        plot = p.periodictable_ggplot2)
+ggsave(filename = here("doc", "periodictable-ggplot.pdf"),
+       plot = p.periodictable_ggplot2)
+# ggsave(filename = here("doc", "periodictable-ggplot.svg"),
+#        plot = p.periodictable_ggplot2)
+# SVG fails, but we can re-create it manually from the PDF using  
 ```
 
 

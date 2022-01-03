@@ -3,10 +3,4 @@
 .RData
 .Ruserdata
 vignettes/periodicdata_cache
-vignettes/*.sty
-vignettes/*.aux
-vignettes/*.fdb*
-vignettes/*.fls
-vignettes/*.log
-Meta
-!doc
+/Meta/

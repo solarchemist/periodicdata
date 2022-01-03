@@ -891,13 +891,9 @@ ggsave(filename = here("doc", "periodictable-ggplot.png"),
        plot = p.periodictable_ggplot2)
 ggsave(filename = here("doc", "periodictable-ggplot.pdf"),
        plot = p.periodictable_ggplot2)
+# ggsave() fails for SVG, so we resort to a "manual" conversion using pdf2svg
 # ggsave(filename = here("doc", "periodictable-ggplot.svg"),
 #        plot = p.periodictable_ggplot2)
-# SVG fails, but we can re-create it manually from the PDF using  
+# pdf2svg periodictable-ggplot.pdf periodictable-ggplot.svg
+system(paste("pdf2svg", here("doc/periodictable-ggplot.pdf"), here("doc/periodictable-ggplot.svg")))
 ```
-
-
-
-
-
-

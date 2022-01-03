@@ -1,0 +1,17 @@
+# -----------------------------------------------------------
+# CITATION file created with {cffr} R package, v0.1.1
+# See also: https://docs.ropensci.org/cffr/
+# -----------------------------------------------------------
+
+cff-version: 1.2.0
+message: 'To cite package "periodicdata" in publications, please use the metadata from this file'
+type: dataset
+license: GPL-3.0-or-later
+title: 'Properties of the chemical elements'
+version: 0.1.0.9000
+abstract: Provides a dataset of physical properties of the chemical elements.
+authors:
+- family-names: Ahmed
+  given-names: Taha
+  email: taha@chepec.se
+  orcid: https://orcid.org/0000-0001-6717-0408

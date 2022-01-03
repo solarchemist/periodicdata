@@ -732,10 +732,15 @@ write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
 ## ---- echo=T, eval=FALSE----------------------------------------------------------
 #  purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
 
-## ----ggsavechunk, echo=T, eval=FALSE, fig.width=9, fig.height=5.25----------------
-#  # note that the doc/ directory is only created after running devtools::build_vignettes()
-#  ggsave(filename = here("doc", "periodictable-ggplot.svg"),
-#         plot = p.periodictable_ggplot2)
-#  ggsave(filename = here("doc", "periodictable-ggplot.png"),
-#         plot = p.periodictable_ggplot2)
+## ----ggsavechunk, echo=T, eval=TRUE, fig.width=9, fig.height=5.25-----------------
+# note that the doc/ directory is only created after running devtools::build_vignettes()
+ggsave(filename = here("doc", "periodictable-ggplot.png"), 
+       plot = p.periodictable_ggplot2)
+ggsave(filename = here("doc", "periodictable-ggplot.pdf"),
+       plot = p.periodictable_ggplot2)
+# ggsave() fails for SVG, so we resort to a "manual" conversion using pdf2svg
+# ggsave(filename = here("doc", "periodictable-ggplot.svg"),
+#        plot = p.periodictable_ggplot2)
+# pdf2svg periodictable-ggplot.pdf periodictable-ggplot.svg
+system(paste("pdf2svg", here("doc/periodictable-ggplot.pdf"), here("doc/periodictable-ggplot.svg")))
 

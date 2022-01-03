@@ -4,7 +4,8 @@
 \name{units}
 \alias{units}
 \title{Corresponding units to elemental properties in "values" dataframe}
-\format{A data frame with 118 rows and 82 variables:
+\format{
+A data frame with 118 rows and 82 variables:
 \describe{
   \item{Name}{}
   \item{Symbol}{}
@@ -85,7 +86,8 @@
   \item{IUPAC_Period}{}
   \item{IUPAC_Group}{}
   \item{IUPAC_Number}{}
-}}
+}
+}
 \source{
 \url{https://periodictable.com/}
 

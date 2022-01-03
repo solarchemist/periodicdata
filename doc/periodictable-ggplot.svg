@@ -375,6 +375,7 @@
 </defs>
 <g id="surface1">
 <rect x="0" y="0" width="648" height="377" style="fill:rgb(100%,100%,100%);fill-opacity:1;stroke:none;"/>
+<rect x="0" y="0" width="648" height="377" style="fill:rgb(100%,100%,100%);fill-opacity:1;stroke:none;"/>
 <path style="fill:none;stroke-width:1.07;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(100%,100%,100%);stroke-opacity:1;stroke-miterlimit:10;" d="M 0 0 L 648 0 L 648 378 L 0 378 Z M 0 0 " transform="matrix(1,0,0,-1,0,377)"/>
 <rect x="0" y="0" width="648" height="377" style="fill:rgb(92.156982%,92.156982%,92.156982%);fill-opacity:1;stroke:none;"/>
 <path style=" stroke:none;fill-rule:nonzero;fill:rgb(81.176758%,75.294495%,78.039551%);fill-opacity:1;" d="M 111.488281 333.46875 L 146.351562 333.46875 L 146.351562 298.621094 L 111.488281 298.621094 Z M 111.488281 333.46875 "/>

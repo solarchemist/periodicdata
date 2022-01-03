@@ -4,7 +4,8 @@
 \name{values}
 \alias{values}
 \title{Elemental properties}
-\format{A data frame with 118 rows and 82 variables:
+\format{
+A data frame with 118 rows and 82 variables:
 \describe{
   \item{Name}{}
   \item{Symbol}{}
@@ -86,7 +87,8 @@
   \item{IUPAC_Group}{}
   \item{IUPAC_Number}{}
   \item{IUPAC_Series}{}
-}}
+}
+}
 \source{
 \url{https://periodictable.com/}
 

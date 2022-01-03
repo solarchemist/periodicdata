@@ -1,11 +1,11 @@
 Package: periodicdata
 Type: Package
 Title: Properties of the chemical elements
-Version: 0.0.0.9002
+Version: 0.1.0.9000
 Author: Taha Ahmed
 Maintainer: Taha Ahmed <taha@chepec.se>
 Description: Provides a dataset of physical properties of the chemical elements.
-License: GPL-3
+License: GPL-3 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 2.10)
@@ -23,4 +23,4 @@ Suggests:
    stringr,
    usethis
 VignetteBuilder: knitr
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1

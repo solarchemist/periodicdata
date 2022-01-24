@@ -1,8 +1,10 @@
+[![DOI](https://zenodo.org/badge/200434309.svg)](https://doi.org/10.5281/zenodo.5898568)
+
 # Periodic data
 
 We have scraped a dataset consisting of all chemical elements and around 80 properties and placed them in a more easily accessible format.
 
-This package includes two vignettes that demonstrate a few different approaches to construct the periodic table and how to plot a property. 
+This R package includes two vignettes that demonstrate a few different approaches to construct the periodic table and how to plot a property.
 Our hope is that this package will make it easier for chemists and others interested in the chemical sciences to generate periodic tables of whatever trend they wish to visualise.
 
 This package was based on some of my old projects (see Earlier work below).

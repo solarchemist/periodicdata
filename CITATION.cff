@@ -9,6 +9,7 @@ type: dataset
 license: GPL-3.0-or-later
 title: 'Properties of the chemical elements'
 version: 0.1.0.9000
+doi: 10.5281/zenodo.5898568
 abstract: Provides a dataset of physical properties of the chemical elements.
 authors:
 - family-names: Ahmed

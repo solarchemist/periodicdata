@@ -1,7 +1,7 @@
 Package: periodicdata
 Type: Package
 Title: Properties of the chemical elements
-Version: 0.2.0.9000
+Version: 0.2.1.9000
 Author: Taha Ahmed
 Maintainer: Taha Ahmed <taha@chepec.se>
 Description: Provides a dataset of physical properties of the chemical elements.

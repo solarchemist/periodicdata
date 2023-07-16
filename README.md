@@ -58,7 +58,7 @@ I suggest the following package rebuild procedure:
 + Run `devtools::check()`.
   Should complete with no errors, warnings, or notes:
 ```
-── R CMD check results ──────────────────────────── periodicdata 0.2.0.9000 ────
+── R CMD check results ──────────────────────────── periodicdata 0.2.1.9000 ────
 Duration: 19.1s
 
 0 errors ✔ | 0 warnings ✔ | 0 notes ✔

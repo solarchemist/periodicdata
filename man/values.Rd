@@ -5,7 +5,7 @@
 \alias{values}
 \title{Elemental properties}
 \format{
-A data frame with 118 rows and 82 variables:
+A data frame with 120 rows and 82 variables:
 \describe{
   \item{Name}{}
   \item{Symbol}{}
@@ -83,6 +83,8 @@ A data frame with 118 rows and 82 variables:
   \item{Flashpoint}{}
   \item{Heat_of_Combustion}{}
   \item{Gmelin_Number}{}
+  \item{Production}{}
+  \item{Price}{}
   \item{IUPAC_Period}{}
   \item{IUPAC_Group}{}
   \item{IUPAC_Number}{}
@@ -103,6 +105,8 @@ A data frame with 118 rows and 82 variables:
 \url{https://environmentalchemistry.com/yogi/periodic/}
 
 \url{http://amdc.in2p3.fr/web/nubase_en.html}
+
+\url{https://doi.org/10.1039/C2RA20839C}
 }
 \usage{
 values

@@ -7,8 +7,8 @@ cff-version: 1.2.0
 message: 'To cite package "periodicdata" in publications, please use the metadata from this file'
 type: dataset
 license: GPL-3.0-or-later
-title: 'Properties of the chemical elements'
-version: 0.1.0.9000
+title: 'The periodicdata package: properties of the chemical elements'
+version: 0.2.0.9000
 doi: 10.5281/zenodo.5898568
 abstract: Provides a dataset of physical properties of the chemical elements.
 authors:

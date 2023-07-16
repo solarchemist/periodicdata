@@ -4,7 +4,7 @@
 #'     that is, the quantity or the unitless value in case the property is unitless.
 #'     Units are listed in the sister dataframe "units"
 #' @docType data
-#' @format A data frame with 118 rows and 82 variables:
+#' @format A data frame with 120 rows and 82 variables:
 #' \describe{
 #'   \item{Name}{}
 #'   \item{Symbol}{}
@@ -82,6 +82,8 @@
 #'   \item{Flashpoint}{}
 #'   \item{Heat_of_Combustion}{}
 #'   \item{Gmelin_Number}{}
+#'   \item{Production}{}
+#'   \item{Price}{}
 #'   \item{IUPAC_Period}{}
 #'   \item{IUPAC_Group}{}
 #'   \item{IUPAC_Number}{}
@@ -94,6 +96,7 @@
 #' @source \url{https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-relative-atomic-masses}
 #' @source \url{https://environmentalchemistry.com/yogi/periodic/}
 #' @source \url{http://amdc.in2p3.fr/web/nubase_en.html}
+#' @source \url{https://doi.org/10.1039/C2RA20839C}
 "values"
 
 
@@ -101,7 +104,7 @@
 #' @title Corresponding units to elemental properties in "values" dataframe
 #' @description This dataframe lists the units for each cell in the "values" dataframe
 #' @docType data
-#' @format A data frame with 118 rows and 82 variables:
+#' @format A data frame with 120 rows and 82 variables:
 #' \describe{
 #'   \item{Name}{}
 #'   \item{Symbol}{}
@@ -179,6 +182,8 @@
 #'   \item{Flashpoint}{}
 #'   \item{Heat_of_Combustion}{}
 #'   \item{Gmelin_Number}{}
+#'   \item{Production}{}
+#'   \item{Price}{}
 #'   \item{IUPAC_Period}{}
 #'   \item{IUPAC_Group}{}
 #'   \item{IUPAC_Number}{}
@@ -190,4 +195,5 @@
 #' @source \url{https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-relative-atomic-masses}
 #' @source \url{https://environmentalchemistry.com/yogi/periodic/}
 #' @source \url{http://amdc.in2p3.fr/web/nubase_en.html}
+#' @source \url{https://doi.org/10.1039/C2RA20839C}
 "units"

@@ -1,4 +1,7 @@
-[![DOI](https://zenodo.org/badge/200434309.svg)](https://doi.org/10.5281/zenodo.5898568)
+<!-- badges: start -->
+[![DOI](https://raw.githubusercontent.com/solarchemist/periodicdata/master/man/figures/badge-doi.svg)](https://doi.org/10.5281/zenodo.5898567)
+[![Vignettes](https://raw.githubusercontent.com/solarchemist/periodicdata/master/man/figures/badge-vignette.svg)](https://github.com/solarchemist/periodicdata#read-the-vignette)
+<!-- badges: end -->
 
 # Periodic data
 
@@ -10,52 +13,69 @@ Our hope is that this package will make it easier for chemists and others intere
 This package was based on some of my old projects (see Earlier work below).
 But I reworked most of the code in honour of the [#IYPT2019](https://www.iypt2019.org/) and released it as an R package.
 
-![IUPAC periodic table](https://raw.githubusercontent.com/chepec/periodicdata/master/doc/periodictable-ggplot.png)
+![IUPAC periodic table](https://raw.githubusercontent.com/solarchemist/periodicdata/master/doc/periodictable-ggplot.png)
 
 
 
-## So what can this package do?
+## Read the vignette
 
-Please [have a look at the vignette](https://htmlpreview.github.io/?https://github.com/chepec/periodicdata/blob/master/doc/periodicdata.html).
-You might also like to skim through these blog posts that demonstrate some more examples:
++ [The vignette demonstrates how the dataset was collected, how it can be extended,
+  and shows how the periodic table shown in this README was created](https://htmlpreview.github.io/?https://github.com/solarchemist/periodicdata/blob/master/doc/periodicdata.html).
 
-+ [Properties of the elements: data collection and ggplot2 tables](https://chepec.se/2014/11/16/element-data/)
-+ [All available elemental properties plotted as periodic tables](https://chepec.se/2015/01/30/element-properties/)
+If that piqued your curiosity, you might also like to read these blog posts
+that provide some more examples of working with the periodic data:
+
++ [Properties of the elements: data collection and ggplot2 tables](https://solarchemist.se/2014/11/16/element-data/)
++ [All available elemental properties plotted as periodic tables](https://solarchemist.se/2015/01/30/element-properties/)
 
 
 
 ## Install this package
 
-To install this package on your system, I suggest: 
+To install this package on your system, I suggest:
 
 ```
-install.packages("devtools")
-devtools::install_github("chepec/periodicdata")
+install.packages("remotes")
+remotes::install_github("solarchemist/periodicdata")
 ```
 
-Note that `devtools` [does not build vignettes by default](https://github.com/r-lib/devtools/issues/1896) 
-[when installing packages](https://stackoverflow.com/a/33617870/1198249). 
-To build the vignette when installing this package, replace the last line above with
-
+To also build the vignette locally on your computer when installing this package,
+modify the last line to:
 ```
-devtools::install_github("chepec/periodicdata", build_opts = c("--no-resave-data", "--no-manual"), build_vignettes = TRUE)
+remotes::install_github("solarchemist/periodicdata", build_opts = c("--no-resave-data", "--no-manual"), build_vignettes = TRUE)
 ```
 
 
 ## Develop this package
 
-To check out the source code (perhaps to work on the code and contribute code back ;-), you should `git clone`. Note that this does not tell your R anything about the package.
-
+Check out the source code from this repo:
 ```
-git clone https://github.com/chepec/periodicdata.git
+git clone https://github.com/solarchemist/periodicdata.git
 ```
 
+I suggest the following package rebuild procedure:
 
-## Contributions welcome
++ Run `devtools::check()`.
+  Should complete with no errors, warnings, or notes:
+```
+── R CMD check results ──────────────────────────── periodicdata 0.2.0.9000 ────
+Duration: 19.1s
 
-If you would like to add to this dataset you're very welcome. Open an issue or a pull request.
+0 errors ✔ | 0 warnings ✔ | 0 notes ✔
+```
++ Run `devtools::build_vignettes()` in the console. This recompiles the vignette
+  and populates the `doc/` directory.
++ Manually remove the line `doc` from `.gitignore` (the build step keeps adding it).
 
-And please let me know if you find any errors in the data or the code.
+Contributions are welcome, no matter whether code, bug reports or suggestions!
+
+
+
+## Contributions welcome!
+
+To correct or extend this dataset please open an issue or a create a pull request.
+Other contributions or feedback are also welcome via this repo or
+[contact me directly](https://solarchemist.se/contact).
 
 
 ## Data sources
@@ -71,6 +91,8 @@ And please let me know if you find any errors in the data or the code.
 + [Barbalace, K. "Periodic Table of Elements." 2007](https://environmentalchemistry.com/yogi/periodic/)
 + [Atomic Mass Data Center, NUBASE](http://amdc.in2p3.fr/web/nubase_en.html)
 + [Elements in the Human Body and What They Do](https://sciencenotes.org/elements-in-the-human-body-and-what-they-do/)
++ Vesborg & Jaramillo, Addressing the terawatt challenge: scalability in the supply of chemical elements for renewable energy. [RSC Advances 2, 7933–7947 (2012)](https://doi.org/10.1039/C2RA20839C).
+
 
 
 ## Related periodic table datasets
@@ -97,13 +119,13 @@ And please let me know if you find any errors in the data or the code.
 
 
 
-## Properties in this dataset 
+## Properties in this dataset
 
-Most properties in this dataset were sourced from http://periodictable.com/. 
-Below follows a short description of each property. Source is only noted if other than the one mentioned above.
+A list of every property in this dataset.
+If comment does not mention source then it was sourced from [periodictable.com](http://periodictable.com).
 
-| Property                       | Comment | 
-| ---                            | --- | 
+| Property                       | Comment |
+| ---                            | --- |
 | Name                           |  |
 | Symbol                         |  |
 | Atomic_Number                  | [Atomic_number (Wikipedia)](https://en.wikipedia.org/wiki/Atomic_number) |
@@ -180,8 +202,9 @@ Below follows a short description of each property. Source is only noted if othe
 | Flashpoint                     |  |
 | Heat_of_Combustion             |  |
 | Gmelin_Number                  |  |
+| Production                     | global primary production in 2010, kg/yr (Vesborg & Jaramillo, 2012) |
+| Price                          | price in 2010, USD/kg (Vesborg & Jaramillo, 2012) |
 | IUPAC_Period                   | period numbers re-defined to produce IUPAC-style table |
 | IUPAC_Group                    | group numbers re-defined to produce IUPAC-style table |
 | IUPAC_Number                   | atomic numbers as shown in IUPAC-style table |
 | IUPAC_Series                   |  |
-

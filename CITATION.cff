@@ -8,7 +8,7 @@ message: 'To cite package "periodicdata" in publications, please use the metadat
 type: dataset
 license: GPL-3.0-or-later
 title: 'The periodicdata package: properties of the chemical elements'
-version: 0.2.1.9000
+version: 0.2.2.9000
 doi: 10.5281/zenodo.5898567
 abstract: Provides a dataset of physical properties of the chemical elements.
 authors:

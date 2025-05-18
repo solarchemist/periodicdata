@@ -1,6 +1,17 @@
-^vignettes/periodicdata_cache$
+^renv$
+^.vscode$
 ^.*\.Rproj$
 ^\.Rproj\.user$
+# just in case I forget to delete any dangling Rplots
+^Rplots.pdf$
+^LICENSE$
 ^Meta$
 ^doc$
 ^CITATION\.cff$
+^tools$
+^README\.Rmd$
+^\.envrc$
+^\.Rprofile$
+^renv\.lock$
+^\.renvignore$
+^vignettes/articles$

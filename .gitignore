@@ -1,6 +1,22 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
-vignettes/periodicdata_cache
+/renv
+# to avoid messing up anyone else's PATH, we should not
+# commit .envrc (if they have direnv installed it will
+# actually run, which is not nice). This means I cannot
+# keep .envrc under version control, which is too bad.
+/.envrc
+/.vscode
+/.Rproj.user
+/.Rhistory
+/.RData
+/Rplots.pdf
+/.Ruserdata
+/*.Rproj
+# *_files and *_cache are temporary directories that should normally be removed
+# automatically after vignette rebuilds, but just in case
+/vignettes/**/*_files
+/vignettes/**/*_cache
+# sometimes we commit in the middle of things when build process has not triggered
+# clean-up of generated HTML vignettes yet
+/vignettes/*.html
 /Meta/
+inst/doc

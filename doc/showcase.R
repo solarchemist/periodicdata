@@ -1,0 +1,319 @@
+## ----load-packages----------------------------------------------------------------
+library(here)
+library(yaml)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(ggplot2)
+# https://wilkelab.org/ggtext
+library(ggtext)
+library(knitr)
+
+## ----global_options---------------------------------------------------------------
+options(
+   digits   = 7,
+   width    = 84,
+   stringsAsFactors = FALSE)
+opts_chunk$set(
+   collapse = TRUE,
+   message  = FALSE)
+
+## ----setup------------------------------------------------------------------------
+library(periodicdata)
+source(here("vignettes/code/periodic-table-continuous-scale.R"), local = knit_global())
+source(here("vignettes/code/periodic-table-discrete-scale.R"), local = knit_global())
+source(here("vignettes/code/build-metadata.R"), local = knitr::knit_global())
+
+## ---------------------------------------------------------------------------------
+property_names <- c(
+   "Melting_Point",
+   "Boiling_Point",
+   "Density",
+   "Heat_of_Fusion",
+   "Heat_of_Vapourization",
+   "Thermal_Conductivity",
+   "Density_Liquid",
+   "Molar_Volume",
+   "Electronegativity",
+   "Electron_Affinity",
+   "Electrical_Conductivity",
+   "Percent_in_Universe",
+   "Percent_in_Sun",
+   "Percent_in_Meteorites",
+   "Percent_in_Earths_Crust",
+   "Percent_in_Oceans",
+   "Percent_in_Humans",
+   "Atomic_Radius",
+   "Covalent_Radius",
+   "Half_Life",
+   "Production_2010",
+   "Price_2010",
+   "Block",
+   "Electrical_Type",
+   "Magnetic_Type",
+   "XKCD_Four_Elements",
+   "Natural_Occurrence")
+
+## ---------------------------------------------------------------------------------
+property_names
+
+## ---------------------------------------------------------------------------------
+pmeta <-
+   periodicdata %>%
+   lapply(typeof) %>%
+   as_tibble() %>%
+   pivot_longer(
+      cols = everything(),
+      names_to = "property",
+      values_to = "typeof") %>%
+   left_join(
+      readme_tibble_wide %>% select(property, title, title_symbol, unit),
+      by = "property") %>%
+   filter(property %in% property_names)
+
+## ----periodictable-setup----------------------------------------------------------
+# I cannot figure out how to "center wide" like done in LaTeX in a vignette, so
+# let's colour within the lines and set the periodic table dimensions accordingly
+# dimensions (sensitive setting, box alignment will break if changed)
+# width of text area in vignette 700px which at 96 ppi -> 7.29in
+ptable.width  <- 7.15
+# extended slightly to make room for ggtitle()
+ptable.height <- 4.375 # 4.35
+# adjusted vertical position for lanthanide period
+lanthanoids.vpos <- 8.5
+# adjusted vertical position for actinide period
+actinoids.vpos <- 9.5
+# # position and size of key (legend, manual)
+# ptable.legend <- tibble(
+#    Group = 4, Period = 2,
+#    Symbol = "Symbol", Atomic_Number = "atomic number", Name = "name", Label = "Key:",
+#    Conventional_Atomic_Weight = "conventional atomic wt")
+# columns that must always be part of df passed to our plotting function
+ptable.default.properties <- c("Symbol", "Name", "Atomic_Number", "Group", "Period", "Series")
+
+## ----periodictable-continuous-properties, fig.width = ptable.width, fig.height = ptable.height----
+pmeta.continuous <- pmeta %>% filter(typeof %in% c("double", "integer"))
+for (p in 1:dim(pmeta.continuous)[1]) {
+   ptable.property <- pmeta.continuous$property[p]
+   this.properties <- c(ptable.default.properties, ptable.property)
+   periodicdata %>%
+      # https://tidyselect.r-lib.org/reference/faq-external-vector.html
+      select(all_of(this.properties)) %>%
+      # now we must rename the ptable.property (the VALUE in the current plot) in order
+      # for the plotting code to stay generic
+      rename(VALUE = all_of(ptable.property)) %>%
+      # adjust vertical position for La and Ac periods *before* changing type to character
+      # https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
+      mutate(Period = case_when(
+         Series == "Lanthanide" ~ lanthanoids.vpos,
+         Series == "Actinide" ~ actinoids.vpos,
+         TRUE ~ Period)) %>%
+      mutate(Atomic_Number = as.character(Atomic_Number)) %>%
+      # create two virtual elements as placeholders for the lanthanoids/lanthanoids labels
+      tibble::add_row(
+         Name = c("lanthanoids", "actinoids"),
+         Group = c(3, 3),
+         Period = c(6, 7),
+         Atomic_Number = c("57-71", "89-103"),
+         Series = c("Lanthanide", "Actinide")) %>%
+      periodic_plot_continuous(
+         pdata = .,
+         ptitle = pmeta.continuous$title[p],
+         plegendtitle =
+            # this is verbose but all in the service of good typography...
+            # perhaps this should be extended to also hide unit if it's "1"?
+            ifelse(
+               pmeta.continuous$title_symbol[p] == "",
+               ifelse(
+                  pmeta.continuous$unit[p] == "",
+                  "",
+                  paste0("/ ", pmeta.continuous$unit[p])
+               ),
+               ifelse(
+                  pmeta.continuous$unit[p] != "",
+                  # use normal space before slash because symbols using Markdown
+                  # or sub/supscripts get squished otherwise
+                  paste0(pmeta.continuous$title_symbol[p], " / ", pmeta.continuous$unit[p]),
+                  pmeta.continuous$title_symbol[p]
+               )
+            )
+      ) %>%
+      # since we are inside a loop we must explicitly print
+      print()
+}
+
+## ----ref.label="periodictable-continuous-properties"------------------------------
+# pmeta.continuous <- pmeta %>% filter(typeof %in% c("double", "integer"))
+# for (p in 1:dim(pmeta.continuous)[1]) {
+#    ptable.property <- pmeta.continuous$property[p]
+#    this.properties <- c(ptable.default.properties, ptable.property)
+#    periodicdata %>%
+#       # https://tidyselect.r-lib.org/reference/faq-external-vector.html
+#       select(all_of(this.properties)) %>%
+#       # now we must rename the ptable.property (the VALUE in the current plot) in order
+#       # for the plotting code to stay generic
+#       rename(VALUE = all_of(ptable.property)) %>%
+#       # adjust vertical position for La and Ac periods *before* changing type to character
+#       # https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
+#       mutate(Period = case_when(
+#          Series == "Lanthanide" ~ lanthanoids.vpos,
+#          Series == "Actinide" ~ actinoids.vpos,
+#          TRUE ~ Period)) %>%
+#       mutate(Atomic_Number = as.character(Atomic_Number)) %>%
+#       # create two virtual elements as placeholders for the lanthanoids/lanthanoids labels
+#       tibble::add_row(
+#          Name = c("lanthanoids", "actinoids"),
+#          Group = c(3, 3),
+#          Period = c(6, 7),
+#          Atomic_Number = c("57-71", "89-103"),
+#          Series = c("Lanthanide", "Actinide")) %>%
+#       periodic_plot_continuous(
+#          pdata = .,
+#          ptitle = pmeta.continuous$title[p],
+#          plegendtitle =
+#             # this is verbose but all in the service of good typography...
+#             # perhaps this should be extended to also hide unit if it's "1"?
+#             ifelse(
+#                pmeta.continuous$title_symbol[p] == "",
+#                ifelse(
+#                   pmeta.continuous$unit[p] == "",
+#                   "",
+#                   paste0("/ ", pmeta.continuous$unit[p])
+#                ),
+#                ifelse(
+#                   pmeta.continuous$unit[p] != "",
+#                   # use normal space before slash because symbols using Markdown
+#                   # or sub/supscripts get squished otherwise
+#                   paste0(pmeta.continuous$title_symbol[p], " / ", pmeta.continuous$unit[p]),
+#                   pmeta.continuous$title_symbol[p]
+#                )
+#             )
+#       ) %>%
+#       # since we are inside a loop we must explicitly print
+#       print()
+# }
+
+## ----periodictable-discrete-properties, fig.width = ptable.width, fig.height = ptable.height----
+pmeta.discrete <- pmeta %>% filter(typeof %in% c("character"))
+for (p in 1:dim(pmeta.discrete)[1]) {
+   ptable.property <- pmeta.discrete$property[p]
+   this.properties <- c(ptable.default.properties, ptable.property)
+   periodicdata %>%
+      # https://tidyselect.r-lib.org/reference/faq-external-vector.html
+      select(all_of(this.properties)) %>%
+      # now we must rename the ptable.property (the VALUE in the current plot) in order
+      # for the plotting code to stay generic
+      rename(VALUE = all_of(ptable.property)) %>%
+      # adjust vertical position for La and Ac periods *before* changing type to character
+      # https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
+      mutate(Period = case_when(
+         Series == "Lanthanide" ~ lanthanoids.vpos,
+         Series == "Actinide" ~ actinoids.vpos,
+         TRUE ~ Period)) %>%
+      mutate(Atomic_Number = as.character(Atomic_Number)) %>%
+      # create two virtual elements as placeholders for the lanthanoids/lanthanoids labels
+      tibble::add_row(
+         Name = c("lanthanoids", "actinoids"),
+         Group = c(3, 3),
+         Period = c(6, 7),
+         Atomic_Number = c("57-71", "89-103"),
+         Series = c("Lanthanide", "Actinide")) %>%
+      periodic_plot_discrete(
+         pdata = .,
+         ptitle = pmeta.discrete$title[p],
+         plegendtitle =
+            # this is verbose but all in the service of good typography...
+            # perhaps this should be extended to also hide unit if it's "1"?
+            ifelse(
+               pmeta.discrete$title_symbol[p] == "",
+               ifelse(
+                  pmeta.discrete$unit[p] == "",
+                  "",
+                  paste0("/ ", pmeta.discrete$unit[p])
+               ),
+               ifelse(
+                  pmeta.discrete$unit[p] != "",
+                  # use normal space before slash because symbols using Markdown
+                  # or sub/supscripts get squished otherwise
+                  paste0(pmeta.discrete$title_symbol[p], " / ", pmeta.discrete$unit[p]),
+                  pmeta.discrete$title_symbol[p]
+               )
+            )
+      ) %>%
+      # since we are inside a loop we must explicitly print
+      print()
+}
+
+## ----left-step-periodic-table, fig.width = 7.15, fig.height = 2.55----------------
+symbol.voffset <- 0
+x.offsets <- c(-1.2, 1.2)
+# positive y offsets: first pushes bottom of table upwards, second pulls top of table upwards
+y.offsets <- c(2, -2.3)
+periodicdata %>%
+   select(Symbol, Atomic_Number, Group_Left_Step, Period_Left_Step, Block) %>%
+   mutate(Atomic_Number = as.character(Atomic_Number)) %>%
+   # factorize Block to correspond to visual order
+   mutate(Block = factor(Block, levels = c("f", "d", "p", "s"))) %>%
+   { ggplot(.) +
+      # AXES LIMITS AND BREAKS
+      scale_x_continuous(
+         breaks = seq(min(.$Group_Left_Step), max(.$Group_Left_Step)),
+         limits = c(min(.$Group_Left_Step) + x.offsets[1], max(.$Group_Left_Step) + x.offsets[2]),
+         expand = c(0, 0)) +
+      scale_y_continuous(
+         trans = "reverse",
+         breaks = seq(min(.$Period_Left_Step), max(.$Period_Left_Step)),
+         limits = c(max(.$Period_Left_Step) + y.offsets[1], min(.$Period_Left_Step) + y.offsets[2]),
+         expand = c(0, 0)) +
+      # ELEMENTS
+      geom_point(
+         size = 7, shape = 0,
+         aes(y = Period_Left_Step, x = Group_Left_Step, colour = Block)) +
+      # element symbol
+      geom_text(size = 2.5, colour = "black", fontface = "bold",
+         aes(label = Symbol, y = Period_Left_Step - symbol.voffset, x = Group_Left_Step)) +
+      # LABELS
+      geom_text(
+         # https://stackoverflow.com/a/51388231/1198249
+         data = . %>% distinct(Period_Left_Step, .keep_all = TRUE),
+         x = 32.9, size = 1.7, colour = "black",
+         aes(label = as.character(Period_Left_Step), y = Period_Left_Step)) +
+      geom_text(
+         data = . %>% filter(Period_Left_Step == 7),
+         # I have no idea why or how negative y-coord makes sense, but nothing else worked
+         y = -8.9, size = 1.7, colour = "black",
+         aes(label = as.character(Group_Left_Step), x = Group_Left_Step)) +
+      labs(
+         title = "The left step periodic table",
+         subtitle = "Created with the periodicdata package") +
+      # force size of legend boxes independent of geom_point's aes
+      guides(colour = guide_legend(
+         override.aes = list(size = 2.25),
+         ncol = 4, byrow = TRUE, title.hjust = 0)) +
+      theme(
+         panel.grid.major = element_blank(),
+         panel.grid.minor = element_blank(),
+         panel.background = element_rect(fill = "white"),
+         plot.margin = unit(c(0, 0, -0.85, -0.85), "line"),
+         axis.title = element_blank(),
+         axis.text = element_blank(),
+         axis.ticks = element_blank(),
+         plot.title = element_text(
+            face = "bold", size = rel(1.0), hjust = 0.5, vjust = -2,
+            margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt")),
+         plot.subtitle = element_text(
+            size = rel(0.75), hjust = 0.5, vjust = -4,
+            margin = margin(t = 0, r = 0, b = 0, l = 0, unit = "pt")),
+         legend.position = c(0.22, 0.38),
+         legend.justification = c(0.5, 0),
+         legend.direction = "horizontal",
+         legend.title.position = "top",
+         legend.title = element_text(size = rel(0.70)),
+         # https://www.tidyverse.org/blog/2024/02/ggplot2-3-5-0-legends/#spacing-and-margins
+         legend.text = element_text(face = "italic", margin = margin(l = 0, r = 2, unit = "pt")),
+         legend.key = element_rect(fill = "transparent", colour = "transparent"),
+         legend.background = element_rect(
+            colour = "black", fill = "transparent", linewidth = 0.15)
+      )
+   }
+

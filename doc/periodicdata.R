@@ -1,903 +1,269 @@
-## ----packages, echo=FALSE, message=FALSE--------------------------------------
-library(dplyr)
-library(magrittr) # extract2()
-library(httr)
-library(rvest)
-library(stringr)
-library(readr)
-library(tibble)
-library(knitr)
-library(usethis)
-library(ggplot2)
-library(ggrepel)
-library(scales)
+## ----load-packages------------------------------------------------------------
 library(here)
+library(yaml)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(ggplot2)
+library(knitr)
 
-## ----global_options, echo=FALSE, message=FALSE------------------------------------
+## ----global_options---------------------------------------------------------------
 options(
    digits   = 7,
    width    = 84,
-   continue = " ",
-   prompt   = "> ",
-   warn = 0,
    stringsAsFactors = FALSE)
-opts_chunk$set(
-   dev        = 'svg',
-   #out.width  = "100%",
-	fig.width  = 7.10,
-	fig.height = 4.39,
-   fig.align  = 'center',
-   echo       = FALSE,
-   eval       = TRUE,
-   cache      = TRUE,
-   collapse   = TRUE,
-   results    = 'hide',
-   message    = FALSE,
-   warning    = FALSE,
-   tidy       = FALSE)
-# dont reset scrape_afresh here, it is reset automatically if
-# inst/extdata/periodicdata-raw.rdata is not found
-# this just sets it to the default FALSE
-scrape_afresh <- FALSE
-# periodic table dimensions (sensitive setting, layout will likely break if changed)
-ptable.width <- 9
-ptable.height <- 5.25
+yaml_path <- here("inst/extdata/periodicdata.yml")
 
-## ---- echo=TRUE-------------------------------------------------------------------
-# Starting from this URL, we crawl the page and collect the URLs to all property pages, along with the name of each property.
-# We put them together in a dataframe, so it is clear which URL belongs to which elemental property.
-element_data <- read_html("http://periodictable.com/Elements/001/data.html")
-elemental_properties <- data.frame(
-   property = element_data %>%
-   html_nodes(xpath = "//a") %>%
-   html_text())
-elemental_properties$links_raw <-
-   element_data %>%
-   html_nodes(xpath = "//a") %>%
-   html_attr("href")
-# drop any rows that do not begin "../../"
-elemental_properties <-
-   elemental_properties[grep(
-      pattern = "^\\.\\./\\.\\./",
-      x = elemental_properties$links_raw), ]
-# remove the leading ../.. (relative link signifier)
-elemental_properties$links_trail <- gsub(
-   pattern = "^\\.\\./\\.\\./",
-   replacement = "",
-   x = elemental_properties$links_raw)
-# keep only the rows that begin with "Properties"
-elemental_properties <-
-   elemental_properties[grep(
-      pattern = "^Properties",
-      x = elemental_properties$links_trail), ]
-# make full urls
-elemental_properties$url <- paste0(
-   "http://periodictable.com/",
-   elemental_properties$links_trail)
-# modify the URL so it sorts the table by atomic number
-# (this is a feature of periodictable.com, they offer lists sortered in different ways
-# for each property)
-elemental_properties$url <- sub(
-   pattern = "\\.html$",
-   replacement = ".an.html",
-   x = elemental_properties$url)
-# we are done, go ahead and drop the no longer required columns
-# links_raw, links_trail
-elemental_properties <- elemental_properties[, -c(2,3)]
-# oh, and add a sanitised version of the property names
-elemental_properties$sanitized <- gsub(
-   # replace spaces with underscores
-   "\\s+", "_",
-   # replace "%" with "percent"
-   gsub("%", "Percent",
-      # remove parentheses and dashes
-      gsub("[()-]", "",
-         # remove apostrophes
-         gsub("'", "", elemental_properties$property))))
-# NOTE: Melting point and Boiling point are duplicated because they are displayed twice
-#       on the data page for Hydrogen, both under "Overview" and "Thermal properties".
-#       Other properties could be too, so we should deduplicate the dataframe.
-elemental_properties <- unique(elemental_properties)
-# reset the row numbering
-row.names(elemental_properties) <- seq(1, dim(elemental_properties)[1])
+## ----read-yaml--------------------------------------------------------------------
+# imported YAML data (list of lists of lists)
+# read_yaml() uses the YAML parser provided by libyaml, which conforms to the YAML 1.1 specification
+pd_yaml <- yaml::read_yaml(
+   file = yaml_path,
+   # we want as.named.list = TRUE, otherwise we lose the property names
+   as.named.list = TRUE, # TRUE is default
+   merge.warning = FALSE, # FALSE is default
+   # merge.precedence has no effect for this dataset, as far as I can tell
+   merge.precedence = "order") # "order" is default, else "override"
 
-## ---- echo=TRUE-------------------------------------------------------------------
-# get the name of all the elements (two-step process)
-element_names <-
-   read_html(elemental_properties$url[1]) %>%
-   html_nodes("table") %>% extract2(1) %>%
-   html_nodes("table") %>% extract2(8) %>%
-   html_nodes("td") %>%
-   html_text()
-# here we initialise the properties dataframe, which we will use later
-# to read in all the properties (building the frame using ..._join() calls)
-properties_raw <- data.frame(
-   Name = element_names[
-      read_html(elemental_properties$url[1]) %>%
-      html_nodes("table") %>%
-      extract2(1) %>%
-      html_nodes("table") %>%
-      extract2(8) %>%
-      html_nodes("td") %>%
-      html_attr("align") == "left"])
+## ----properties-yaml--------------------------------------------------------------
+pd_yaml |> summary()
 
-## ---- echo=TRUE-------------------------------------------------------------------
-skip_properties <- c(
-   # has multiple values per element, plus formatting errors in HTML (cell 1 and 120)
-   "Ionization_Energies",
-   # replacement has 120 rows, data has 118
-   "NFPA_Label",
-   # has formatting errors in HTML (cell 1 and 120)
-   "Names_of_Allotropes",
-   # formatting errors in HTML, specifically in cell 1 and 120
-   "Discovery",
-   # formatting errors in HTML, specifically in cell 1 and 120
-   "Lattice_Angles",
-   # formatting errors in HTML, specifically in cell 1 and 120
-   "Lattice_Constants",
-   # replacement has 120 rows, data has 118
-   "Crystal_Structure",
-   # formatting errors in HTML, specifically in cell 1 and 120
-   "Known_Isotopes",
-   # formatting errors in HTML, specifically in cell 1 and 120
-   "Stable_Isotopes",
-   # formatting errors in HTML, specifically in cell 1 and 120
-   "Isotopic_Abundances")
-# drop those rows from elemental_properties
-elemental_properties <-
-   elemental_properties[-which(elemental_properties$sanitized %in% skip_properties), ]
-
-## ---- echo=TRUE-------------------------------------------------------------------
-# This chunk does all the scraping of periodictable.com
-# But it tries its best not to do any scraping
-# If you really want to scrape the website and rebuild the entire dataset from
-# scratch (this takes some time!), go ahead and delete the file "inst/extdata/periodicdata-raw.rdata"
-# before running this chunk!
-if (!file.exists(here::here("inst", "extdata", "periodicdata-raw.rdata"))) {
-   scrape_afresh <- TRUE
-   for (k in 2:length(elemental_properties$property)) {
-      message(paste0(
-         "Reading property page (", k, " of ", length(elemental_properties$property), "): ",
-         elemental_properties$property[k]))
-      # On these property pages, the source HTML appears to be malformed (but recoverable)
-      # The HTML source looks weird: in essence, a number of cells <td></td> are repeated (but not all)
-      # so that the table which is expected to contain 118 *2 = 236 cells contains something like 299 instead.
-      # To be able to ingest such a table, we need to detect and get rid of the duplicated td cells.
-      # My approach is based on the fact that duplicated td cells always lack any CSS attributes, whereas the cells
-      # we want to keep always specify align (either left or right).
-      td_nodes <-
-         read_html(elemental_properties$url[k]) %>%
-         html_nodes("table") %>% extract2(1) %>%
-         html_nodes("table") %>% extract2(8) %>%
-         html_nodes("td")
-      # The formatting of periodictable.com's HTML is unfortunately not consistent across the property pages
-      # On most, the label and value are inside td blocks neatly aligned left or right, but on other property
-      # pages the value part is repeated inside free-standing td blocks lacking any CSS attributes.
-      # To distinguish between these two cases (i.e., remove the duplicate values), I check for the align attr:
-      check_htmltable_align <-
-         td_nodes %>%
-         # here we are just checking for the existence of "align" attribute
-         # will return NA for the td cells that lack align attribute, and those are the duplicates we want to remove
-         html_attr("align")
-      if (any(is.na(check_htmltable_align))) {
-         # if it contains any NAs, print a message (for easier debugging)
-         # example: https://periodictable.com/Properties/A/RTECSNumber.an.html
-         message(paste0("Detected funky formatting on property page ", elemental_properties$property[k]))
-      }
-      # record the full table, element name/value pairs as a single vector
-      property_table <-
-         td_nodes[which(!is.na(check_htmltable_align))] %>% html_text()
-      property <- structure(data.frame(
-         # just the element names
-         Name =
-            property_table[td_nodes[which(!is.na(check_htmltable_align))] %>% html_attr("align") == "right"],
-         # the value of the current property (this column is renamed below)
-         value =
-            property_table[td_nodes[which(!is.na(check_htmltable_align))] %>% html_attr("align") == "left"]),
-         .Names = c("Name", elemental_properties$sanitized[k]))
-      ## NOTE: You CANNOT rely on the order of the element names staying consistent across property pages,
-      ##       in particular not on "funky" property pages. Learned this the hard way.
-      # So here we use what should be a reliable way of growing our properties df with each new property:
-      properties_raw <- left_join(properties_raw, property, by = "Name")
+## ----yaml-to-tibbles--------------------------------------------------------------
+# create a list of tibbles, where each tibble holds a property and the following fields
+# (only "value" or those with length == 1 to ensure they can be recycled)
+pdl_fields <- c("title", "title_symbol", "unit", "description", "footnote", "value")
+# this list is also named with each property from the get-go
+# https://stackoverflow.com/a/35035142/1198249
+# Periodic Data List of tibbles
+pdl <- setNames(vector("list", length = length(pd_yaml)), names(pd_yaml))
+# The "note" field cannot be expected to have the same number of rows as "value",
+# so to make my life easier we will import that into a separate variable
+pdl_note <- setNames(vector("list", length = length(pd_yaml)), names(pd_yaml))
+for (p in 1:length(pd_yaml)) {
+   pdl[[p]] <-
+      pd_yaml[[p]][names(pd_yaml[[p]]) %in% pdl_fields] %>%
+      tibble::as_tibble() %>%
+      # https://tidyr.tidyverse.org/reference/unnest_longer.html
+      tidyr::unnest_longer(col = value, indices_to = "Symbol") %>%
+      # note that this "value" column automatically gets an attribute "names"
+      # which is redundant since we have the "symbol" column. Get rid of it.
+      # To drop attributes from all columns at once: mutate(across(everything(), as.vector))
+      mutate(value = as.vector(value))
+   # now let's take care of the "note" field
+   if (any(names(pd_yaml[[p]]) %in% c("note"))) {
+      pdl_note[[p]] <-
+         pd_yaml[[p]][names(pd_yaml[[p]]) %in% c("note")] %>%
+         tibble::as_tibble() %>%
+         tidyr::unnest_longer(col = note, indices_to = "Symbol")
+      # now we can easily put "note" into place in each tibble
+      # by joining by "symbol" we ensure that each note goes on the correct element's row
+      pdl[[p]] <- left_join(pdl[[p]], pdl_note[[p]], by = "Symbol")
    }
-   properties_raw <- properties_raw %>% arrange(as.numeric(Atomic_Number))
-   # save this dataframe to file
-   # (it is not large, but re-scraping the contents takes time)
-   save(properties_raw, file = here::here("inst", "extdata", "periodicdata-raw.rdata"))
-   write_csv(properties_raw, here::here("inst", "extdata", "periodicdata-raw.csv"))
-} else {
-   load(file = here::here("inst", "extdata", "periodicdata-raw.rdata"))
 }
+# at this point we no longer need the pdl_note list - all its data is incorporated
+# in the tibbles of pdl
+# print three random tibbles from the list (poor man's quality control)
+pdl[sample(1:length(pdl), 3)]
 
-## ----Autoignition_Point, echo=TRUE------------------------------------------------
-property <- structure(data.frame(matrix(c(
-   # Name        # Autoignition_Point
-   "Hydrogen",   "535.5°C",
-   "Lithium",    "179.°C",
-   "Carbon",     "485.°C",
-   "Sodium",     "115.°C",
-   "Magnesium",  "472.°C",
-   "Aluminum",   "400.°C",
-   "Silicon",    "150.°C",
-   "Phosphorus", "300.°C",
-   "Potassium",  "440.°C",
-   "Titanium",   "250.°C",
-   "Chromium",   "400.°C",
-   "Iron",       "100.°C",
-   "Zinc",       "460.°C",
-   "Cadmium",    "250.°C",
-   "Tin",        "630.°C",
-   "Tellurium",  "340.°C",
-   "Samarium",   "150.°C",
-   "Thorium",    "130.°C"),
-   ncol = 2, byrow = T)),
-   .Names = c("Name", "Autoignition_Point"))
-properties_raw <- left_join(properties_raw, property, by = "Name")
-
-## ----Flashpoint, echo=TRUE--------------------------------------------------------
-property <- structure(data.frame(matrix(c(
-   # Name        # Flashpoint
-   "Hydrogen",   "-18.°C",
-   "Sodium",     "4.°C",
-   "Magnesium",  "500.°C",
-   "Aluminum",   "645.°C",
-   "Phosphorus", "30.°C",
-   "Bromine",    "-18.°C"),
-   ncol = 2, byrow = T)),
-   .Names = c("Name", "Flashpoint"))
-properties_raw <- left_join(properties_raw, property, by = "Name")
-
-## ----Heat_of_Combustion, echo=TRUE------------------------------------------------
-property <- structure(data.frame(matrix(c(
-   # Name      # Heat_of_Combustion
-   "Lithium",  "-298.J/(Kg K)",
-   "Carbon",   "-393.J/(Kg K)",
-   "Magnesium","-668.J/(Kg K)",
-   "Silicon",  "-9055.J/(Kg K)",
-   "Potassium","-182.J/(Kg K)",
-   "Calcium",  "-990.J/(Kg K)",
-   "Germanium","-536.J/(Kg K)"),
-   ncol = 2, byrow = T)),
-   .Names = c("Name", "Heat_of_Combustion"))
-properties_raw <- left_join(properties_raw, property, by = "Name")
-
-## ----Gmelin_Number, echo=TRUE-----------------------------------------------------
-property <- structure(data.frame(matrix(c(
-   # Name         # Gmelin_Number
-   "Hydrogen",		"Gmelin3",
-   "Neon",		   "Gmelin16211",
-   "Sodium",		"Gmelin563",
-   "Magnesium",	"Gmelin16207",
-   "Aluminum",		"Gmelin16248",
-   "Silicon",		"Gmelin61188",
-   "Phosphorus",	"Gmelin8863",
-   "Argon",		   "Gmelin821",
-   "Potassium",	"Gmelin15203",
-   "Helium",		"Gmelin16294",
-   "Calcium",		"Gmelin16277",
-   "Scandium",		"Gmelin16304",
-   "Titanium",		"Gmelin16313",
-   "Vanadium",		"Gmelin49047",
-   "Chromium",		"Gmelin16274",
-   "Manganese",	"Gmelin699",
-   "Iron",		   "Gmelin6845",
-   "Cobalt",		"Gmelin49017",
-   "Nickel",		"Gmelin16229",
-   "Copper",		"Gmelin16269",
-   "Lithium",		"Gmelin30",
-   "Zinc",		   "Gmelin16321",
-   "Gallium",		"Gmelin16287",
-   "Germanium",	"Gmelin93634",
-   "Arsenic",		"Gmelin16247",
-   "Selenium",		"Gmelin8872",
-   "Bromine",		"Gmelin1182",
-   "Krypton",		"Gmelin16201",
-   "Rubidium",		"Gmelin16244",
-   "Strontium",	"Gmelin16302",
-   "Yttrium",		"Gmelin16319",
-   "Beryllium",	"Gmelin16256",
-   "Zirconium",	"Gmelin16322",
-   "Niobium",		"Gmelin16213",
-   "Molybdenum",	"Gmelin16205",
-   "Ruthenium",	"Gmelin16241",
-   "Rhodium",		"Gmelin16245",
-   "Palladium",	"Gmelin16239",
-   "Silver",		"Gmelin1253",
-   "Cadmium",		"Gmelin16276",
-   "Indium",		"Gmelin1081",
-   "Boron",		   "Gmelin16262",
-   "Tin",		   "Gmelin16300",
-   "Tellurium",	"Gmelin1153",
-   "Iodine",		"Gmelin1160",
-   "Xenon",		   "Gmelin1125",
-   "Cesium",		"Gmelin15188",
-   "Barium",		"Gmelin16266",
-   "Cerium",		"Gmelin16275",
-   "Praseodymium","Gmelin16238",
-   "Carbon",		"Gmelin8868",
-   "Neodymium",	"Gmelin16212",
-   "Samarium",		"Gmelin16301",
-   "Europium",		"Gmelin15985",
-   "Gadolinium",	"Gmelin16286",
-   "Terbium",		"Gmelin16311",
-   "Dysprosium",	"Gmelin16278",
-   "Holmium",		"Gmelin16291",
-   "Erbium",		"Gmelin16280",
-   "Thulium",		"Gmelin16307",
-   "Nitrogen",		"Gmelin150",
-   "Ytterbium",	"Gmelin16014",
-   "Lutetium",		"Gmelin16202",
-   "Hafnium",		"Gmelin16293",
-   "Tantalum",		"Gmelin16312",
-   "Tungsten",		"Gmelin16317",
-   "Rhenium",		"Gmelin16243",
-   "Osmium",		"Gmelin16234",
-   "Iridium",		"Gmelin16298",
-   "Platinum",		"Gmelin79607",
-   "Gold",		   "Gmelin16246",
-   "Oxygen",		"Gmelin485",
-   "Mercury",		"Gmelin1623",
-   "Thallium",		"Gmelin16308",
-   "Lead",		   "Gmelin16240",
-   "Bismuth",		"Gmelin16267",
-   "Radon",		   "Gmelin16242",
-   "Radium",		"Gmelin40437",
-   "Fluorine",		"Gmelin16281",
-   "Thorium",		"Gmelin16314",
-   "Uranium",		"Gmelin16315",
-   "Plutonium",	"Gmelin40432"),
-   ncol = 2, byrow = T)),
-   .Names = c("Name", "Gmelin_Number"))
-properties_raw <- left_join(properties_raw, property, by = "Name")
-
-## ----production-price, echo=TRUE--------------------------------------------------
-# Note, I have rather lazily entered year 2010 for *all* values from Vesborg,
-# despite that paper noting that some values were taken from previous years.
-# If time permits, go back and check @Vesborg2012 and update year field in
-# those cases.
-vesborg2012 <- tibble::tribble(
-   ~Symbol, ~Production,         ~Price, ~value, ~year,  ~mb,   ~comment,
-    "Fe",         12.4 ,          -0.24,   12.1,  2010,  "M",   "",
-    "Cl",         10.7 ,             NA,     NA,  2010,   "",   "NaCl",
-    "N",          11.1 ,           0.8 ,   11.9,  2010,  "M",   "NH3 only",
-    "Na",         11.0 ,             NA,     NA,  2010,  "M",   "NaCl",
-    "O",          10.9 ,          -1.4 ,     NA,  2010,  "M",   "O2 only",
-    "H",          10.8 ,           0.9 ,   10.7,  2010,  "M",   "H2 only",
-    "S",          10.8 ,          -0.7 ,   10.1,  2010,  "B",   "Oil by-product",
-    "Al",         10.6 ,           0.3 ,   10.9,  2010,  "M",   "",
-    "Ca",         10.5 ,             NA,     NA,  2010,  "M",   "Ca compounds",
-    "P",          10.5 ,          -0.28,   10.8,  2010,  "M",   "Phosphate rock",
-    "K",          10.4 ,             NA,     NA,  2010,  "M",   "K compounds",
-    "Cr",         10.3 ,           0.4 ,   10.7,  2010,  "M",   "",
-    "Cu",         10.2 ,           0.9 ,   11.1,  2010,  "M",   "",
-    "Mn",         10.1 ,           0.6 ,   10.7,  2010,  "M",   "",
-    "Zn",         10.1 ,           0.26,   10.3,  2010,  "M",   "",
-    "Ba",          9.9 ,             NA,     NA,  2010,  "M",   "Mostly BaSO4",
- #  "Mg",          9.8 ,           0.5 ,   10.3,  2010,  "M",   "Mg compounds",
- #  "Mg",          8.9 ,             NA,     NA,  2010,   "",   "Mg metal",
- # I have joined Mg compounds and Mg metal from Vesborg2012 into a single row
-    "Mg",          9.85,           0.5 ,     NA,  2010,  "M",   "Metallic and compounds",
-    "Si",          9.8 ,           0.4 ,   10.2,  2010,  "M",   "Si only, no SiO2",
-    "Pb",          9.6 ,           0.28,    9.9,  2010, "MB",   "Also a by-product of Zn",
-    "Ar",          9.5 ,          -0.21,    9.3,  2010,  "M",   "",
-    "F",           9.4 ,             NA,     NA,  2010,  "M",   "Mostly CaF2",
- #  "Ti",          9.4 ,           1.4 ,   10.4,  2010,  "M",   "TiO2 + FeTiO3",
- #  "Ti",          8.1 ,             NA,     NA,  2010,   "",   "Ti metal",
- # I have joined Ti compounds and Ti metal from Vesborg2012 into a single row
-    "Ti",          9.42,           1.4 ,     NA,  2010,   "",   "Metallic and oxides",
-    "B",           9.2 ,           1.4 ,   10.6,  2010,  "M",   "B compounds",
-    "C",           9.2 ,           0.18,    9.4,  2010,  "M",   "Graphite only",
-    "Ni",          9.1 ,           1.3 ,   10.4,  2010,  "M",   "",
-    "Zr",          8.9 ,           0.5 ,    9.4,  2010,  "M",   "Mostly ZrO2",
-    "Br",          8.8 ,           0.3 ,     NA,  2010,  "M",   "",
-    "Sr",          8.6 ,           0.8 ,    9.4,  2010,  "M",   "Sr compounds",
-    "Mo",          8.4 ,           1.5 ,    9.9,  2010, "BM",   "By-product Cu",
-    "Sn",          8.4 ,           1.3 ,    9.4,  2010,  "M",   "",
-    "Sb",          8.2 ,           1.2 ,    9.4,  2010,  "M",   "",
-    "Co",          7.9 ,           1.6 ,    9.5,  2010,  "B",   "",
-    "Nb",          7.8 ,           2.0 ,    9.8,  2010,  "M",   "",
-    "W",           7.8 ,           2.8 ,   10.6,  2010,  "M",   "",
-    "V",           7.8 ,           1.4 ,    9.2,  2010,  "M",   "",
-    "U",           7.7 ,           2.0 ,    9.7,  2010,  "M",   "Radioactive",
-    "Ce",          7.6 ,           2.0 ,    9.6,  2010,  "M",   "With La and Nd",
-    "As",          7.6 ,           0.21,    7.8,  2010,  "B",   "",
-    "La",          7.5 ,           2.0 ,    9.5,  2010,  "M",   "With Ce and Nd",
-    "I",           7.5 ,           1.4 ,     NA,  2010,  "M",   "",
-    "Th",            NA,           1.9 ,     NA,  2010,  "M",   "Radioactive",
-    "Ag",          7.4 ,           3.0 ,   10.4,  2010,  "B",   "Mostly by-product, approx. 30% primary product",
-    "Li",          7.4 ,           1.5,     8.9,  2010,  "M",   "",
-    "Nd",          7.3 ,           2.5,     9.8,  2010,  "M",   "With La and Ce",
-    "He",          7.3 ,           0.5,     7.8,  2010,  "B",   "By-product of natural gas",
-    "Cd",          7.3 ,           0.4,     7.7,  2010,  "B",   "By-product Zn",
-    "Y",           6.8 ,           2.3,     9.1,  2010,  "B",   "By-product HREEs",
-    "Bi",          6.8 ,           1.5,     8.3,  2010,  "B",   "By-product Pb",
-    "Pr",          6.7 ,           2.5,     9.2,  2010,  "B",   "By-product LREEs",
-    "Ne",          6.7 ,           2.5,      NA,  2010,  "B",   "By-product Ar",
-    "Au",          6.4 ,           4.7,    11.1,  2010,  "M",   "",
-    "Sm",          6.4 ,           2.2,     8.6,  2010,  "B",   "By-product LREEs",
-    "Se",          6.4 ,           2.1,     8.5,  2010,  "B",   "By-product Cu",
-    "Gd",          6.3 ,           2.3,     8.6,  2010,  "B",   "By-product HREEs",
-    "Hg",          6.3 ,           1.7,     8.0,  2010,  "M",   "",
-    "Dy",          6.0 ,           3.4,     9.4,  2010,  "M",   "Co-product Eu",
-    "Ta",          6.0 ,           2.7,     8.7,  2010,  "M",   "",
-    "Be",          5.8 ,            NA,      NA,  2010,  "M",   "",
-    "Er",          5.8 ,           2.5,      NA,  2010,  "B",   "By-product HREE",
-    "In",          5.7 ,           2.9,     8.6,  2010,  "B",   "By-product Zn",
-    "Te",          5.7 ,           2.5,     8.2,  2010,  "B",   "By-product Cu",
-    "Yb",          5.7 ,           2.7,      NA,  2010,  "B",   "By-product HREE",
-    "Eu",          5.6 ,           3.8,     9.4,  2010,  "M",   "Co-product Dy",
-    "Kr",          5.6 ,           2.6,      NA,  2010,  "B",   "By-product Ar",
-    "Ho",          5.4 ,           3.5,      NA,  2010,  "B",   "By-product HREE",
-    "Tb",          5.3 ,           3.7,     9.0,  2010,  "B",   "By-product HREE",
-    "Pd",          5.3 ,           4.3,     9.6,  2010,  "B",   "By-product Ni, Pt",
-    "Pt",    log10(2e5),   log10(30e3),      NA,  2020,  "M",   "@Chatenet2022",
-    "Ge",          5.1 ,           3.2,     8.3,  2010,  "B",   "By-product Zn",
-    "Ga",          5.1 ,           2.9,     7.9,  2010,  "B",   "By-product Al",
-    "Tm",          5.1 ,           4.0,      NA,  2010,  "B",   "By-product HREE",
-    "Lu",          5.0 ,           4.0,      NA,  2010,  "B",   "By-product HREE",
-    "Hf",          4.9 ,           2.8,     7.7,  2010,  "B",   "By-product Zr",
-    "Re",          4.7 ,           3.5,     8.2,  2010,  "B",   "By-product Mo, (Cu)",
-    "Xe",          4.6 ,           3.4,     8.0,  2010,  "B",   "By-product Ar",
-    "Rh",          4.4 ,           4.7,     9.1,  2010,  "B",   "By-product Pt",
-    "Ru",          4.4 ,           3.7,     8.1,  2010,  "B",   "By-product Pt",
-    "Ir",  log10(7.7e3),  log10(203e3),      NA,  2018,  "B",   "By-product of Pt. Production 2018 from @Minke2021, price 2021 from @Chatenet2022",
-    "Tl",          4   ,            NA,      NA,  2010,  "B",   "By-product Cu, Zn",
-    "Cs",          4   ,            NA,      NA,  2010,  "M",   "Co-product Li, Ta, Pb",
-    "Os",          3.7 ,           4.5,      NA,  2010,  "B",   "By-product Pt",
-    "Rb",          3.6 ,           4.6,     8.2,  2010,  "M",   "Co-product Cs, Ta, Li",
-    "Sc",          3.3 ,           3.1,      NA,  2010,  "B",   "By-product")
-# for purposes of quality control (easier check for duplicates, etc.) let's add
-# atomic number
-vesborg2012 %<>%
-   left_join(properties_raw %>% select(Symbol, Atomic_Number), by = "Symbol")
-
-## ----echo=FALSE-------------------------------------------------------------------
-p.data <-
-   vesborg2012 %>%
-   select(Symbol, Atomic_Number, Production)
-ggplot(p.data, aes(y = 10^Production, x = as.numeric(Atomic_Number))) +
-   geom_line(colour = "gray", size = 0.75) +
-   geom_point() +
-   # formatting this axis title nicely required scales::
-   # https://stackoverflow.com/questions/10762287/how-can-i-format-axis-labels-with-exponents-with-ggplot2-and-scales
-   scale_y_log10(
-      name = "Global annual production/(kg/yr)",
-      breaks = scales::trans_breaks("log10", function(x) 10^x),
-      # note, for this trans_format() to work as intended that data needs to in absolute numbers
-      labels = scales::trans_format("log10", math_format(10^.x))) +
-   scale_x_continuous(name = "Atomic number, Z") +
-   geom_text_repel(
-      aes(label = Symbol))
-
-## ----echo=FALSE-------------------------------------------------------------------
-p.data <-
-   vesborg2012 %>%
-   select(Symbol, Atomic_Number, Production, Price)
-ggplot(p.data, aes(y = 10^Price, x = 10^Production)) +
-   # geom_line(colour = "gray", size = 0.75) +
-   geom_point() +
-   scale_x_log10(
-      name = "Global annual production/(kg/yr)",
-      breaks = scales::trans_breaks("log10", function(x) 10^x),
-      labels = scales::trans_format("log10", math_format(10^.x))) +
-   scale_y_log10(
-      name = "Price/(USD/kg)",
-      breaks = scales::trans_breaks("log10", function(x) 10^x),
-      labels = scales::trans_format("log10", math_format(10^.x))) +
-   geom_text_repel(
-      aes(label = Symbol))
+## ----yaml-reference-to-attribute--------------------------------------------------
+for (p in 1:length(pd_yaml)) {
+   if (any(names(pd_yaml[[p]]) %in% c("reference"))) {
+      attr(pdl[[p]], "reference") <-
+         pd_yaml[[p]][names(pd_yaml[[p]]) %in% c("reference")]$reference
+   }
+}
 
 ## ---------------------------------------------------------------------------------
-# note that the production and price values above are log10(),
-# which is how they are presented in @Vesborg2012
-# unfortunately I have not found the source values anywhere (haven't asked the authors yet, though)
-# this means a quite significant loss of accuracy in the following conversion, but
-# we do it anyway because I want to be explicit regarding the units
-vesborg2012 %<>%
-   mutate(Production = ifelse(
-      is.na(Production),
-      "",
-      # formatC ensures that the number is decimal and not scientific notation even if larger number,
-      # because scientific notation messes up our values-units split algo below (yes, that should be improved...)
-      paste(formatC(10^Production, format = "fg"), "kg/yr"))) %>%
-   mutate(Price = ifelse(
-      is.na(Price),
-      "",
-      paste(formatC(10^Price, format = "fg"), "USD/kg")))
-# now let's incorporate production and price into the properties dataset
-properties_raw <- left_join(
-   properties_raw,
-   vesborg2012 %>% select(Symbol, Production, Price),
-   by = "Symbol")
+pdl$Production_2010 |> attr("reference")
 
-## ---- echo=TRUE-------------------------------------------------------------------
-# create empty dataframes to hold quantities and units, respectively
-values <- units  <-
-   data.frame(matrix(
-      nrow = dim(properties_raw)[1],
-      ncol = dim(properties_raw)[2],
-      dimnames = list(seq(1, dim(properties_raw)[1]), names(properties_raw)),
-      byrow = TRUE))
-# The dataset on periodictable.com also has footnotes.
-# These are not saved in the current implementation of `periodicdata`
-
-## ---- echo=T----------------------------------------------------------------------
-# to re-create the matrix below, get started like this:
-# cat(paste0(names(properties_raw), collapse = ",\n"))
-property_types <- structure(data.frame(matrix(c(
-   "Name",                           "character",
-   "Symbol",                         "character",
-   "Atomic_Number",                  "unitless number",
-   "Atomic_Weight",                  "unitless number",
-   "Density",                        "number with unit",
-   "Melting_Point",                  "number with unit",
-   "Boiling_Point",                  "number with unit",
-   "Phase",                          "character",
-   "Absolute_Melting_Point",         "number with unit",
-   "Absolute_Boiling_Point",         "number with unit",
-   # contains converted values in parentheses
-   "Critical_Pressure",              "number with unit",
-   "Critical_Temperature",           "number with unit",
-   "Heat_of_Fusion",                 "number with unit",
-   "Heat_of_Vaporization",           "number with unit",
-   "Specific_Heat",                  "number with unit",
-   "Adiabatic_Index",                "character",
-   "Neel_Point",                     "number with unit",
-   "Thermal_Conductivity",           "number with unit",
-   "Thermal_Expansion",              "number with unit",
-   "Density_Liquid",                 "number with unit",
-   "Molar_Volume",                   "unitless number",
-   "Brinell_Hardness",               "number with unit",
-   "Mohs_Hardness",                  "number with unit",
-   "Vickers_Hardness",               "number with unit",
-   "Bulk_Modulus",                   "number with unit",
-   "Shear_Modulus",                  "number with unit",
-   "Young_Modulus",                  "number with unit",
-   "Poisson_Ratio",                  "unitless number",
-   "Refractive_Index",               "unitless number",
-   "Speed_of_Sound",                 "number with unit",
-   "Valence",                        "unitless number",
-   "Electronegativity",              "unitless number",
-   "ElectronAffinity",               "number with unit",
-   "DOT_Hazard_Class",               "unitless number",
-   "DOT_Numbers",                    "unitless number",
-   "RTECS_Number",                   "character",
-   "Alternate_Names",                "character",
-   "Block",                          "character",
-   "Group",                          "character",
-   "Period",                         "character",
-   "Series",                         "character",
-   "Electron_Configuration",         "character",
-   "Color",                          "character",
-   "Gas_phase",                      "character",
-   "CAS_Number",                     "character",
-   "CID_Number",                     "character",
-   "Electrical_Type",                "character",
-   "Electrical_Conductivity",        "number with unit",
-   "Resistivity",                    "number with unit",
-   "Superconducting_Point",          "unitless number",
-   "Magnetic_Type",                  "character",
-   "Curie_Point",                    "number with unit",
-   "Mass_Magnetic_Susceptibility",   "unitless number",
-   "Molar_Magnetic_Susceptibility",  "unitless number",
-   "Volume_Magnetic_Susceptibility", "unitless number",
-   "Percent_in_Universe",            "number with unit",
-   "Percent_in_Sun",                 "number with unit",
-   "Percent_in_Meteorites",          "number with unit",
-   "Percent_in_Earths_Crust",        "number with unit",
-   "Percent_in_Oceans",              "number with unit",
-   "Percent_in_Humans",              "number with unit",
-   "Atomic_Radius",                  "number with unit",
-   "Covalent_Radius",                "number with unit",
-   "Van_der_Waals_Radius",           "number with unit",
-   "Space_Group_Name",               "character",
-   "Space_Group_Number",             "unitless number",
-   # quantity includes "Stable" and num + unit. Units are a mix of time units: ms, s, m, d, y
-   "HalfLife",                       "number with unit",
-   # quantity includes "Stable" and num + unit. Units are a mix of time units: ms, s, m, d, y
-   "Lifetime",                       "number with unit",
-   "Decay_Mode",                     "character",
-   "Quantum_Numbers",                "character",
-   "Neutron_Cross_Section",          "unitless number",
-   "Neutron_Mass_Absorption",        "unitless number",
-   "Autoignition_Point",             "number with unit",
-   "Heat_of_Combustion",             "number with unit",
-   "Gmelin_Number",                  "character",
-   "Production",                     "number with unit",
-   "Price",                          "number with unit"),
-   ncol = 2, byrow = T)), .Names = c("Data", "Type"))
-
-## ---- echo=T, warning=FALSE-------------------------------------------------------
-# running this loop usually produces warnings "NAs introduced by coercion". We can disregard those.
-for (k in 1:dim(property_types)[1]) {
-   # clean up or convert the quantity or unit depending on type of data in each property
-   # type is defined manually in the matrix in the chunk above
-   if (property_types$Type[k] == "character") {
-      values[, which(names(values) == property_types$Data[k])] <-
-         properties_raw %>%
-         pull(property_types$Data[k]) %>%
-         gsub("\\[note\\]", "", x = .) %>%
-         gsub("^N/A$", "", x = .) %>%
-         gsub("^None$", "", x = .)
-   } else if (property_types$Type[k] == "unitless number") {
-      values[, which(names(values) == property_types$Data[k])] <-
-         properties_raw %>%
-         pull(property_types$Data[k]) %>%
-         gsub("\\[note\\]", "", x = .) %>%
-         gsub("×10", "E", x = .) %>%
-         # final step, make sure the column is numeric
-         as.numeric()
-   } else if (property_types$Type[k] == "number with unit") {
-      values[, which(names(values) == property_types$Data[k])] <-
-         properties_raw %>%
-         pull(property_types$Data[k]) %>%
-         gsub("\\[note\\]", "", x = .) %>%
-         # replace "Stable" with Inf (only found in HalfLife, Lifetime)
-         gsub("^Stable$", "Inf", x = .) %>%
-         # replace ×10 with proper power notation
-         gsub("×10", "E", x = .) %>%
-         # extract the numeric quantity (including the string "Inf")
-         str_extract("Inf|[-×\\.0-9E]+") %>%
-         # final step, make sure this column is numeric
-         as.numeric()
-      units[, which(names(units) == property_types$Data[k])] <-
-         properties_raw %>%
-         pull(property_types$Data[k]) %>%
-         gsub("N/A", "", x = .) %>%
-         gsub("\\[note\\]", "", x = .) %>%
-         # replace "Stable" with Inf (only found in HalfLife, Lifetime)
-         gsub("^Stable$", "Inf", x = .) %>%
-         # remove any numbers+units within parentheses
-         gsub("\\([.0-9]+\\s[A-Za-z]+\\)", "", x = .) %>%
-         # remove the numeric quantity (including the string "Inf")
-         # take care not to use gsub here, since numbers could also be part of the unit (e.g., "g/cm3")
-         sub("Inf|[-×\\.0-9E]+", "", x = .) %>%
-         # remove any leading and trailing whitespace
-         str_trim(side="both") %>%
-         # replace empty string with NA
-         gsub("^$", NA, x = .)
-   } else {
-      message("This should never happen!")
-   }
+## ----wide-tibble-every-property---------------------------------------------------
+# First, we need something to join against, for this I chose Symbol which is
+# a natural choice as the unique identifier in this dataset
+# For the sake of consistency, use capitalized name for Symbol column
+pdt <- tibble(Symbol = pdl$Symbol$value)
+for (p in which(names(pdl) != "Symbol")) {
+   pdt <- left_join(
+      x = pdt,
+      y = pdl[[p]] |>
+         # discard all columns except $value
+         select(value, Symbol) |>
+         # value in column $title should be set as new name for column $value.
+         # Turns out it is doable, but note the unusual syntax !! :=
+         # https://stackoverflow.com/questions/45472480/how-to-rename-a-column-to-a-variable-name-in-a-tidyverse-way
+         dplyr::rename(!!names(pdl)[p] := value),
+      by = "Symbol")
 }
 
-## ---- echo=TRUE, results='markup'-------------------------------------------------
-# Units by property
-sapply(units, unique)
+## ---------------------------------------------------------------------------------
+pdt[, c(1, 2, sample(3:ncol(pdt)))]
 
-## ---- echo=TRUE, results='markup'-------------------------------------------------
-# All units in the dataset as a simple vector
-cat(paste(sort(unique(unlist(sapply(units, unique)))), collapse = "\n"))
+## ----periodictable-dimensions-----------------------------------------------------
+# dimensions (sensitive setting, box alignment will break if changed)
+ptable.width  <- 9.00
+ptable.height <- 5.25
+element.symbol.voffset <- 0.1
+element.name.voffset   <- 0.12
+element.period.voffset <- 0.32
+# adjusted vertical position for lanthanide period
+lanthanoids.vpos <- 8.5
+# adjusted vertical position for actinide period
+actinoids.vpos <- 9.5
+# position and size of key (legend, manual)
+ptable.legend <- tibble(
+   Group = 4, Period = 2,
+   Symbol = "Symbol", Atomic_Number = "atomic number", Name = "name", Label = "Key:",
+   Conventional_Atomic_Weight = "conventional atomic wt")
 
-## ---- echo=TRUE-------------------------------------------------------------------
-## %           (percent)
-## °C          => K
-## d           => s (day to second)
-## g/cm3       => kg/m^3
-## g/l         => kg/m^3
-## GPa         => Pa
-## h           => s (hour to second)
-## J/(Kg K)    => J/(kg K) (fix wrong case)
-## J/(kg K)
-## K           (Kelvin)
-## K-1         (per Kelvin)
-## kJ/mol      (kilojoule per mol)
-## m           => s (only exists in HalfLife and Lifetime property, so this is minutes not metres)
-## m Ω         => Ohm m (electrical resistivity, Ohm metre) # avoid Ω, causes non-ASCII char warning on package build
-## m/s         (metre per second)
-## MPa         => Pa
-## ms          => s (millisecond to second)
-## pm          => m (picometre to metre)
-## S/m         (Siemens per metre)
-## W/(m K)     (Watt per metre-Kelvin)
-## y           => s (year to second)
+## ----periodictable-tibble---------------------------------------------------------
+ptable_iupac <-
+   pdt %>%
+   select(Symbol, Name, Atomic_Number, Conventional_Atomic_Weight, Group, Period, Series) %>%
+   # adjust vertical position for La and Ac periods *before* changing type to character
+   # https://stackoverflow.com/questions/22337394/dplyr-mutate-with-conditional-values
+   mutate(Period = case_when(
+      # Atomic_Number >= 57 & Atomic_Number <= 71 ~ lanthanides.vpos,
+      Series == "Lanthanide" ~ lanthanoids.vpos,
+      # Atomic_Number >= 89 & Atomic_Number <= 103 ~ actinides.vpos,
+      Series == "Actinide" ~ actinoids.vpos,
+      TRUE ~ Period)) %>%
+   mutate(Atomic_Number = as.character(Atomic_Number)) %>%
+   # create two virtual elements as placeholders for the lanthanoids/lanthanoids labels
+   tibble::add_row(
+      Name = c("lanthanoids", "actinoids"),
+      Group = c(3, 3),
+      Period = c(6, 7),
+      Atomic_Number = c("57-71", "89-103"),
+      Series = c("Lanthanide", "Actinide"))
 
-## ---- echo=TRUE-------------------------------------------------------------------
-pcf <- structure(data.frame(matrix(c(
-   # from      # to        # conversion factor
-   "°C",       "K",        "+273.15",
-   "d",        "s",        "86400",
-   "g/cm3",    "kg/m^3",   "1E3",
-   "g/l",      "kg/m^3",   "1",
-   "GPa",      "Pa",       "1E9",
-   "h",        "s",        "3600",
-   "J/(Kg K)", "J/(kg K)", "1",
-   # minutes to seconds
-   "m",        "s",        "60",
-   "m Ω",      "Ohm m",    "1",
-   "MPa",      "Pa",       "1E6",
-   "ms",       "s",        "1E-3",
-   # be careful that this substitution doesn't precede "mins to secs"
-   "pm",       "m",        "1E-12",
-   "y",        "s",        "3.154E7"),
-   ncol = 3, byrow = T)),
-   .Names = c("pattern", "convert", "factor"))
-
-## ---- echo=T----------------------------------------------------------------------
-# Replace the units and convert values according to pcf
-for (k in 1:dim(units)[2]) {
-   # if the entire column is NA, move to the next one
-   if (all(is.na(units[, k]))) {next}
-   for (i in 1:dim(units)[1]) {
-      # jump to the next cell immediately if unit is empty
-      if (is.na(units[i, k])) {next}
-      # for each cell, compare the unit to pcf$pattern,
-      # and if they match, replace it with pcf$convert
-      # and apply the conversion factor on the value
-      # match() returns the position of the match
-      # in pcf$pattern, or NA if no match was found
-      hit <- match(units[i, k], pcf$pattern)
-      if (!is.na(hit)) {
-         # go ahead and replace unit and convert value
-         units[i, k] <- pcf$convert[hit]
-         # had to find a way to handle the odd addition operation,
-         # opted to do it with a string operation and this if-else
-         if (substr(pcf$factor[hit], 1, 1) %in% c("+", "-")) {
-            if (substr(pcf$factor[hit], 1, 1) == "-") {
-               values[i, k] <-
-                  values[i, k] + as.numeric(pcf$factor[hit])
-            } else {
-               values[i, k] <-
-                  values[i, k] + as.numeric(sub("^\\+", "", pcf$factor[hit]))
-            }
-         } else {
-            # not addition/subtraction operation
-            values[i, k] <-
-               values[i, k] * as.numeric(pcf$factor[hit])
-         }
-      }
-   }
-}
-
-## ----Density-vs-AtomicNumber, fig.cap="Density vs atomic number.", warning=FALSE----
+## ----periodictable-iupac-ggplot, fig.width=ptable.width, fig.height=ptable.height----
+## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_text()`).
+## Warning: Removed 34 rows containing missing values or values outside the scale range
+## (`geom_text()`).
 ggplot() +
+   ### LEGEND
+   # key legend (manual)
+   # a rectangular shape would be better... # ggstar extension? or just define a path?
    geom_point(
-      data = values %>% filter(!is.na(Density)),
-      aes(Atomic_Number, Density)) +
-   geom_path(
-      data = values %>% filter(!is.na(Density)),
-      aes(Atomic_Number, Density)) +
+      data = ptable.legend,
+      size = 22, shape = 0,
+      aes(y = Period, x = Group)) +
+   # key label
+   geom_text(data = ptable.legend,
+      size = 2.0, colour = "black",
+      # manually adjusted until it aligned nicely with outer top-left of legend box
+      aes(label = Label, y = Period - 0.8, x = Group - 0.5)) +
+   # key atomic number
+   geom_text(data = ptable.legend,
+      size = 1.8, colour = "black",
+      aes(label = Atomic_Number, y = Period - 1.1 * element.period.voffset, x = Group)) +
+   # key element symbol
+   geom_text(data = ptable.legend,
+      size = 3, colour = "black", fontface = "bold",
+      aes(label = Symbol, y = Period - element.symbol.voffset, x = Group)) +
+   # key element name
+   geom_text(data = ptable.legend,
+      size = 1.6, colour = "black",
+      aes(label = tolower(Name), y = Period + element.name.voffset, x = Group)) +
+   # key atomic weight
+   geom_text(data = ptable.legend,
+      size = 1.6, colour = "black",
+      aes(label = Conventional_Atomic_Weight, y = Period + 1.1 * element.period.voffset, x = Group)) +
+   ### COPYLEFT
+   annotate("text",
+      x = 0.35, y = 9.5, vjust = 0.5, hjust = 0, size = 7.5,
+      label = "🄍") +
+   annotate("text",
+      x = 0.85, y = 9.5, vjust = 0.5, hjust = 0, size = 2.6,
+      label = paste0("Last updated ", Sys.Date(), "\nFreely licensed CC0")) +
+   ### ELEMENTS
+   scale_x_continuous(
+      breaks = seq(
+         min(ptable_iupac$Group),
+         max(ptable_iupac$Group)),
+      limits = c(
+         min(ptable_iupac$Group) - 1.2,
+         max(ptable_iupac$Group) + 0.8),
+      expand = c(0, 0)) +
+   scale_y_continuous(
+      trans = "reverse",
+      breaks = seq(
+         min(ptable_iupac$Period),
+         max(ptable_iupac$Period)),
+      limits = c(
+         max(ptable_iupac$Period) + 1,
+         min(ptable_iupac$Period) - 1.5),
+      expand = c(0, 0)) +
+   # lanthanoids and actinoids background colour drawn before boxes
    geom_point(
-      data = values %>% filter(!is.na(Density)) %>% filter(Group == "18"),
-      aes(Atomic_Number, Density),
-      colour = "red") +
-   geom_text_repel(
-      data = values %>% filter(!is.na(Density)) %>% filter(Group == "18"),
-      aes(Atomic_Number, Density, label = Symbol),
-      colour = "red") +
-   scale_y_log10() +
-   labs(
-      x = "Atomic number",
-      y = paste0(
-         "Density",
-         "/(",
-         unique(units$Density[which(!is.na(units$Density))]),
-         ")"))
-
-## ---- echo=TRUE-------------------------------------------------------------------
-values$IUPAC_Period <- values$Period %>% as.numeric()
-values$IUPAC_Group <- values$Group %>% as.numeric()
-values$IUPAC_Number <- values$Atomic_Number %>% as.character()
-values$IUPAC_Series <- values$Series
-# to maintain same dimensions as values dataframe
-units$IUPAC_Period <- NA
-units$IUPAC_Group <- NA
-units$IUPAC_Number <- NA
-# Fix coordinates for lanthanides and actinoids
-# lanthanoids 57-71: Period = 8, Group = seq(4, 18)
-values$IUPAC_Period[seq(57, 71)] <- 8.5
-values$IUPAC_Group[seq(57, 71)] <- seq(4, 18)
-values[which(values$Symbol == "Lu"), which(names(values) == "IUPAC_Series")] <- "Lanthanide"
-# actinoids 89-103: Period = 9, Group = seq(4, 18)
-# increase Period slightly to increase the gap up to the transition block
-values$IUPAC_Period[seq(89, 103)] <- 9.5
-values$IUPAC_Group[seq(89, 103)] <- seq(4, 18)
-values[which(values$Symbol == "Lr"), which(names(values) == "IUPAC_Series")] <- "Actinide"
-# add placeholder "element" for lanthanoids and actinoids after Ba and Ra, respectively
-# (this is just to conform to the IUPAC table layout)
-values[nrow(values) + 1,
-       which(names(values) %in% c("Name", "IUPAC_Period", "IUPAC_Group", "IUPAC_Number", "IUPAC_Series"))] <-
-   data.frame("lanthanoids", 6, 3, "57–71", "Lanthanide")
-values[nrow(values) + 1,
-       which(names(values) %in% c("Name", "IUPAC_Period", "IUPAC_Group", "IUPAC_Number", "IUPAC_Series"))] <-
-   data.frame("actinoids", 7, 3, "89–103", "Actinide")
-# add corresponding empty rows to units df to maintain the same dimensions:
-units[nrow(units) + 1, ] <- NA
-units[nrow(units) + 1, ] <- NA
-
-## ----periodictable-ggplot2, echo=T, warning=F, fig.width=ptable.width, fig.height=ptable.height----
-p.periodictable_ggplot2 <-
-   ggplot() +
-   # lanthanoids and actinoids background colour drawn first
-   geom_point(
-      data = values %>% filter(IUPAC_Series == "Lanthanide"),
+      data = ptable_iupac %>% filter(Series == "Lanthanide"),
       size = 16,
       shape = 15,
       colour = "#cfc0c7",
-      aes(y = IUPAC_Period, x = IUPAC_Group)) +
+      aes(y = Period, x = Group)) +
    geom_point(
-      data = values %>% filter(IUPAC_Series == "Actinide"),
+      data = ptable_iupac %>% filter(Series == "Actinide"),
       size = 16,
       shape = 15,
       colour = "#a58394",
-      aes(y = IUPAC_Period, x = IUPAC_Group)) +
+      aes(y = Period, x = Group)) +
    # boxes for all elements
    geom_point(
-      data = values,
+      data = ptable_iupac,
       # size 16 leaves no gaps between the element boxes at fig.width=9,fig.height=5.25
       size = 16,
       shape = 0,
-      aes(y = IUPAC_Period, x = IUPAC_Group)) +
+      aes(y = Period, x = Group)) +
    # element symbol
    geom_text(
-      data = values,
+      data = ptable_iupac,
       size = 3,
       colour = "black",
       fontface = "bold",
-      aes(label = Symbol, y = IUPAC_Period - 0.1, x = IUPAC_Group)) +
+      aes(label = Symbol, y = Period - element.symbol.voffset, x = Group)) +
    # atomic number
    geom_text(
-      data = values,
+      data = ptable_iupac,
       size = 1.8,
       colour = "black",
-      aes(label = IUPAC_Number, y = IUPAC_Period - 0.32, x = IUPAC_Group)) +
+      aes(label = Atomic_Number, y = Period - element.period.voffset, x = Group)) +
    # element name
    geom_text(
-      data = values,
+      data = ptable_iupac,
       size = 1.6,
       colour = "black",
-      aes(label = tolower(Name), y = IUPAC_Period + 0.12, x = IUPAC_Group)) +
+      aes(label = tolower(Name), y = Period + element.name.voffset, x = Group)) +
    # atomic weight
    geom_text(
-      data = values,
+      data = ptable_iupac,
       size = 1.6,
       colour = "black",
-      aes(label = Atomic_Weight, y = IUPAC_Period + 0.32, x = IUPAC_Group)) +
+      aes(label = Conventional_Atomic_Weight, y = Period + element.period.voffset, x = Group)) +
    # period labels
    geom_text(
-      data = values %>% filter(IUPAC_Period < 8),
-      size = 1.7,
-      colour = "black",
-      aes(label = IUPAC_Period, y = IUPAC_Period),
+      data = ptable_iupac %>% filter(Period <= 7) %>% filter(Group == 1),
+      size = 1.7, colour = "black",
+      aes(label = Period, y = Period),
       x = 0.38) +
    # group labels # positions manually adjusted
    geom_text(
       data = data.frame(
          y = c(0.38, 1.38, rep(3.38, 10), rep(1.38, 5), 0.38),
-         x = seq(1,18)),
+         x = seq(1, 18)),
       size = 1.7,
       colour = "black",
       aes(label = x, x = x, y = y)) +
-   # table title # position manually adjusted
-   annotate(
-      "text",
+   # title # position manually adjusted
+   annotate("text",
       x = 9, y = 0.6, vjust = 0,
       size = 4.5,
       fontface = "bold",
-      label = "Periodic Table of the Elements") +
-   # table subtitle # position manually adjusted
-   annotate(
-      "text",
+      label = "IUPAC Periodic Table of the Elements") +
+   # subtitle # position manually adjusted
+   annotate("text",
       x = 9, y = 0.74, vjust = 1,
       size = 2.6,
-      label = "Created with the periodicdata package by solarchemist.se") +
-   scale_x_continuous(
-      breaks = seq(
-         min(values$IUPAC_Group),
-         max(values$IUPAC_Group)),
-      limits = c(
-         min(values$IUPAC_Group) - 1,
-         max(values$IUPAC_Group) + 1),
-      expand = c(0,0)) +
-   scale_y_continuous(
-      trans = "reverse",
-      breaks = seq(
-         min(values$IUPAC_Period),
-         max(values$IUPAC_Period)),
-      limits = c(
-         max(values$IUPAC_Period) + 1,
-         min(values$IUPAC_Period) - 1.5),
-      expand = c(0,0)) +
+      label = "Created with the periodicdata package") +
    theme(
       panel.grid.major = element_blank(),
       panel.grid.minor = element_blank(),
@@ -906,180 +272,41 @@ p.periodictable_ggplot2 <-
       axis.text = element_blank(),
       axis.ticks = element_blank(),
       # center (roughly) over transition metal block
-      legend.position = c(0.42, 0.91),
+      legend.position.inside = c(0.42, 0.91),
       legend.justification = c(0.5, 1),
       legend.direction = "horizontal",
       # make the legend colourbar a little longer
       legend.key.width = unit(2.5, "line"),
       legend.title = element_blank(),
       legend.background = element_rect(fill = "transparent"))
-print(p.periodictable_ggplot2)
 
-## ----echo=FALSE, warning=FALSE----------------------------------------------------
-p.data <-
-   values %>%
-   select(Symbol, Atomic_Number, Production, Percent_in_Earths_Crust)
-ggplot(p.data, aes(y = 1e3*Percent_in_Earths_Crust, x = Production)) +
-   geom_point() +
-   geom_smooth(method = "lm", formula = "y~x", se = TRUE, linetype ="dashed", fill = "gray") +
-   scale_x_log10(
-      name = "Global annual production/(kg/yr)",
-      breaks = scales::trans_breaks("log10", function(x) 10^x),
-      labels = scales::trans_format("log10", math_format(10^.x))) +
-   scale_y_log10(
-      name = "Crustal abundance/ppm",
-      breaks = scales::trans_breaks("log10", function(x) 10^x),
-      labels = scales::trans_format("log10", math_format(10^.x))) +
-   geom_text_repel(aes(label = Symbol))
+## ----ggsave-periodictable-iupac-ggplot, eval=FALSE, echo=FALSE, warning=FALSE-----
+# ### NOTE eval should not be flipped manually, use "rebuild_package.sh --refresh-demo" instead!
+# # ggsave() saves the last generated plot by default
+# # create.dir=TRUE creates the directory even if it does not already exist
+# # PNG file uses much wider font than expected, causes overflow in some places!
+# ggplot2::ggsave(filename = here::here("doc", "periodictable-iupac.png"),
+#    create.dir = TRUE, width = ptable.width, height = ptable.height)
+# # ggsave to PDF fails when running build_vignettes() if plot contains Unicode characters
+# # but running render() works, although the CC0 symbol is not properly printed in PDF
+# # https://git.solarchemist.se/taha/periodicdata/issues/18
+# # https://stackoverflow.com/questions/62837580/save-unicode-characters-to-pdf-in-r
+# # also, font is slightly wider than expected (but not as wide as PNG)
+# ggplot2::ggsave(filename = here::here("doc", "periodictable-iupac.pdf"),
+#    create.dir = TRUE, width = ptable.width, height = ptable.height)
+# ggplot2::ggsave(filename = here("doc", "periodictable-iupac.svg"),
+#    create.dir = TRUE, width = ptable.width, height = ptable.height)
 
-## ----periodictable-production-price, echo=F, warning=F, fig.width=ptable.width, fig.height=ptable.height----
-legend.mock.box <- tibble::tribble(
-   ~x,  ~y,       ~text, ~id,    ~label,
-   3.2, 2.8,      "",    "box",  "",
-   3.2, 2.8-0.25, "Mo",  "text", "",
-   3.2, 2.8+0.03, "8.4", "text", "Annual production (log)",
-   3.2, 2.8+0.28, "1.5", "text", "Market price (log)")
-ggplot() +
-   # production rates above 1 Mt/yr (note, data is in kg)
-   geom_point(
-      data = values %>% filter(Production > 1e9),
-      size = 16, shape = 15, # alpha = 0.5,
-      aes(y = IUPAC_Period, x = IUPAC_Group, colour = "megaton")) +
-   # production rates above 33 kt/yr (note, data is in kg)
-   geom_point(
-      data = values %>% filter(Production > 33e6 & Production <= 1e9),
-      size = 16, shape = 15, # alpha = 0.75,
-      aes(y = IUPAC_Period, x = IUPAC_Group, colour = "medium")) +
-   # production rates above 1 kt/yr (note, data is in kg)
-   geom_point(
-      data = values %>% filter(Production > 1e6 & Production <= 33e6),
-      size = 16, shape = 15, # alpha = 0.5,
-      aes(y = IUPAC_Period, x = IUPAC_Group, colour = "low")) +
-   # production rates less than 1 kt/yr (note, data is in kg)
-   geom_point(
-      data = values %>% filter(Production <= 1e6),
-      size = 16, shape = 15, # alpha = 0.5,
-      aes(y = IUPAC_Period, x = IUPAC_Group, colour = "rare")) +
-   # boxes for all elements
-   geom_point(
-      data = values,
-      # size 16 leaves no gaps between the element boxes at fig.width=9,fig.height=5.25
-      size = 16, shape = 0,
-      aes(y = IUPAC_Period, x = IUPAC_Group)) +
-   # element symbol
-   geom_text(
-      data = values,
-      size = 3,
-      colour = "black",
-      fontface = "bold",
-      aes(label = Symbol, y = IUPAC_Period - 0.24, x = IUPAC_Group)) +
-   # show atomic number range for La, Ac placeholder cells
-   geom_text(
-      data = values %>% filter(is.na(Atomic_Number)),
-      size = 2.2,
-      colour = "black",
-      aes(label = IUPAC_Number, y = IUPAC_Period - 0.24, x = IUPAC_Group)) +
-   # log(production)
-   geom_text(
-      data = values,
-      size = 2.4, colour = "black",
-      aes(
-         label = ifelse(is.na(Production), "", formatC(log10(Production), format="f",  digits=1)),
-         y = IUPAC_Period + 0.04, x = IUPAC_Group)) +
-   # log(price)
-   geom_text(
-      data = values,
-      size = 2.4, colour = "black",
-      aes(
-         label = ifelse(is.na(Price), "", formatC(log10(Price), format="f",  digits=1)),
-         y = IUPAC_Period + 0.28, x = IUPAC_Group)) +
-   # table title # position manually adjusted
-   annotate(
-      "text",
-      x = 9, y = 0.6, vjust = 0,
-      size = 4.5,
-      fontface = "bold",
-      label = "Production and economics of the chemical elements") +
-   # table subtitle # position manually adjusted
-   annotate(
-      "text",
-      x = 9, y = 0.74, vjust = 1,
-      size = 2.6,
-      label = "Based on Vesborg & Jaramillo, RSC Advances 2, 7933–7947 (2012)") +
-   scale_x_continuous(
-      breaks = seq(
-         min(values$IUPAC_Group),
-         max(values$IUPAC_Group)),
-      limits = c(
-         min(values$IUPAC_Group) - 1,
-         max(values$IUPAC_Group) + 1),
-      expand = c(0,0)) +
-   scale_y_continuous(
-      trans = "reverse",
-      breaks = seq(
-         min(values$IUPAC_Period),
-         max(values$IUPAC_Period)),
-      limits = c(
-         max(values$IUPAC_Period) + 1,
-         min(values$IUPAC_Period) - 1.5),
-      expand = c(0,0)) +
-   # a mock element box as legend
-   geom_point(
-      data = legend.mock.box %>% filter(id == "box"),
-      size = 14, shape = 0, aes(x = x, y = y)) +
-   geom_text(
-      data = legend.mock.box %>% filter(id != "box"),
-      colour = "black", size = 2.6,
-      aes(label = text, x = x, y = y)) +
-   geom_text_repel(
-      data = legend.mock.box %>% filter(id != "box"),
-      nudge_x = 1.75, size = 2.5, point.padding = 0.75, direction = "both",
-      aes(label = label, x = x, y = y)) +
-   scale_colour_manual(
-      name = "Global production",
-      guide = guide_legend(
-         override.aes = list(size = 3),
-         title.position = "top"),
-      # warning, alpha is not obeyed by legend keys - I don't know why
-      values = c(megaton = alpha("#07B248", 0.5), medium = alpha("#C4E2BF", 0.75), low = alpha("#F4B521", 0.5), rare = alpha("#ED2025", 0.5)),
-      labels = c(">1 Mt/yr", ">33 kt/yr", ">1 kt/yr", "<1 kt/yr")) +
-   theme(
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      plot.margin = unit(c(0, 0, -0.85, -0.85), "line"),
-      axis.title = element_blank(),
-      axis.text = element_blank(),
-      axis.ticks = element_blank(),
-      # legend is manually centered atop the transition metal block
-      legend.position = c(0.45, 0.82),
-      legend.justification = c(0.5, 1),
-      legend.direction = "horizontal",
-      legend.key = element_rect(fill = NA, colour = NA),
-      # key.size had no effect on the legend key size! see guides() above instead
-      # key.width affects the horizontal spacing of the key, not the coloured box
-      legend.key.width = unit(2, "mm"),
-      legend.text = element_text(size = 10),
-      #legend.title = element_blank(),
-      legend.background = element_rect(fill = NA))
+## ----echo=FALSE, message=FALSE, results="asis"------------------------------------
+source(here::here("vignettes/code/generate-markdown.R"), local = knitr::knit_global())
 
-## ---- echo=T----------------------------------------------------------------------
-# use_data() saves each dataframe to `data/` as an *.rda file
-use_data(values, units, overwrite = TRUE)
-write_csv(values, here("inst", "extdata", "periodicdata-values.csv"))
-write_csv(units, here("inst", "extdata", "periodicdata-units.csv"))
-
-## ---- echo=TRUE, eval=FALSE-------------------------------------------------------
-#  purl(input = here("vignettes", "periodicdata.Rmd"), output = here("inst", "extdata", "periodicdata-raw.R"))
-
-## ----ggsavechunk, echo=TRUE, eval=FALSE-------------------------------------------
-#  # note that the doc/ directory is only created after running devtools::build_vignettes()
-#  ggsave(
-#     filename = here::here("doc", "periodictable-ggplot.png"),
-#     plot = p.periodictable_ggplot2, width = ptable.width, height = ptable.height)
-#  ggsave(
-#     filename = here::here("doc", "periodictable-ggplot.pdf"),
-#     plot = p.periodictable_ggplot2, width = ptable.width, height = ptable.height)
-#  ggsave(
-#     filename = here("doc", "periodictable-ggplot.svg"),
-#     plot = p.periodictable_ggplot2, width = ptable.width, height = ptable.height)
+## ----save-package-data, eval=FALSE, echo=TRUE-------------------------------------
+# ### NOTE eval should not be flipped manually, use "rebuild_package.sh --refresh-data" instead!
+# periodicdata <- pdt
+# usethis::use_data(periodicdata, internal = FALSE, overwrite = TRUE)
+# # I think YAML format is much easier to work with than CSV in this case
+# # but just in case others don't agree, let's also write a CSV for each dataframe
+# readr::write_csv(periodicdata, here("inst/extdata", "periodicdata.csv"))
+# # generate R/data.R
+# source(here::here("vignettes/code/generate-roxygen.R"), local = knitr::knit_global())
 

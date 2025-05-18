@@ -1,28 +1,31 @@
 Package: periodicdata
 Type: Package
 Title: Properties of the chemical elements
-Version: 0.2.2.9000
+Version: 0.3.0.9000
 Author: Taha Ahmed
-Maintainer: Taha Ahmed <taha@chepec.se>
-Description: Provides a dataset of physical properties of the chemical elements.
-License: GPL-3 + file LICENSE
+Maintainer: Taha Ahmed <taha@solarchemist.se>
+Description:
+   This package collects and provides data and metadata of the properties
+   of the chemical elements, and demonstrates how they can be visualized.
+   Data is entered in YAML format, converted to R object by the package
+   and exported as `periodicdata` tibble.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Depends: R (>= 2.10)
+Depends: 
+    R (>= 3.5)
 Suggests:
    knitr,
    rmarkdown,
    dplyr,
-   magrittr,
    ggplot2,
-   ggrepel,
+   ggtext,
    scales,
    here,
-   httr,
-   readr,
    tibble,
-   rvest,
-   stringr,
-   usethis
+   yaml,
+   tidyr,
+   stringr
 VignetteBuilder: knitr
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2
+Config/Needs/website: rmarkdown

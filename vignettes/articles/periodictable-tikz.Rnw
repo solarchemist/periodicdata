@@ -1,17 +1,10 @@
-%\VignetteIndexEntry{Periodic Table of the Elements}
-%\VignetteEngine{knitr::knitr}
-%\VignetteKeyword{Periodic table}
-%\VignetteKeyword{IUPAC}
-%\VignetteKeyword{LaTeX}
-%\VignetteKeyword{TikZ}
-
 %% This work was created by Taha Ahmed, 2010
 %% Last updated: 2019-07-30
 %% This work is a derived work.
 %% Original work by Ivan Griffin
-%% http://www.texample.net/tikz/examples/periodic-table-of-chemical-elements/
+%% http://www.texample.net/tikz/examples/periodic-table-of-chemical-elements
 %% Layout based on the IUPAC periodic table
-%% https://iupac.org/what-we-do/periodic-table-of-elements/
+%% https://iupac.org/what-we-do/periodic-table-of-elements
 
 
 \documentclass{article}

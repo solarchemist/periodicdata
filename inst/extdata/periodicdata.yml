@@ -1,3 +1,6 @@
+# yaml-language-server: $schema=../../tools/schema.json
+# The above line is specific to yaml-language-server extension of VSCode.
+# https://developers.redhat.com/blog/2020/11/25/how-to-configure-yaml-schema-to-make-editing-files-easier#schema_association_without_a_file_name_pattern
 Symbol:
   title: Symbol
   value:
@@ -7172,7 +7175,7 @@ Covalent_Radius:
     - "Lv": null
     - "Ts": null
     - "Og": null
-van_der_Waals_Radius:
+Van_der_Waals_Radius:
   title: van der Waals radius
   title_symbol: "*r*"
   description: >
@@ -9161,7 +9164,7 @@ Element_Descriptions:
     - "Ts": "Ununseptium is the temporary name of an undiscovered chemical element with the temporary symbol Uus and atomic number 117. It is the only missing element in period 7 of the periodic table. Since it is placed below the halogens it may share qualities similar to astatine or iodine. The first attempt to synthesize this element is currently underway at the Flerov Laboratory of Nuclear Reactions in Dubna, Russia."
     - "Og": "Ununoctium , also known as eka-radon or element 118, is the temporary IUPAC name for the transactinide element having the atomic number 118 and temporary element symbol Uuo. On the periodic table of the elements, it is a p-block element and the last one of the 7th period. Ununoctium is currently the only synthetic member of Group 18. It has the highest atomic number and highest atomic mass of all discovered elements. The radioactive ununoctium atom is very unstable, and since 2002, only three atoms (possibly four) of the isotope 294Uuo have been detected. While this allowed for very little experimental characterization of its properties and possible compounds, theoretical calculations have allowed for many predictions, including some very unexpected ones. For example, although ununoctium is a member of Group 18, it is probably not a noble gas, as are all the other Group 18 elements. It was formerly thought to be a gas but is now predicted to be a solid under normal conditions."
 XKCD_Four_Elements:
-  title: Classical Periodic Table as seen on XKCD
+  title: Classical Elements Periodic Table as seen on XKCD
   description: >
     Reproduction of XKCD #2975 published 2024-08-21.
   reference:

@@ -1,0 +1,35 @@
+{
+   "$schema": "http://json-schema.org/draft-04/schema#",
+   "$id": "https://github.com/solarchemist/periodicdata/blob/main/tools/schema.json",
+   "title": "Schema for periodicdata YAML",
+   "description": "JSON schema constraining all metadata fields",
+   "$comment": "Type must be object here at top level. Setting it to string causes validation to fail everywhere. Note that patternProperties in combination with 'additionalProperties: false' is what constrains top-level names to the regex defined in pattern (without 'additionalProperties: false' those property names would validate, but so would any other property name.",
+   "type": "object",
+   "patternProperties": {
+      "^[A-Z][A-Za-z0-9_]+$": {
+         "type": "object",
+         "properties": {
+            "title": {
+               "type": "string"
+            },
+            "title_symbol": {
+               "type": "string"
+            },
+            "description": {
+               "type": "string"
+            },
+            "note": {
+               "type": "array"
+            },
+            "footnote": {
+               "type": "string"
+            },
+            "reference": {
+               "type": "array"
+            }
+         },
+         "required": [ "title" ]
+      }
+   },
+   "additionalProperties": false
+}

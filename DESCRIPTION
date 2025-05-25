@@ -1,7 +1,7 @@
 Package: periodicdata
 Type: Package
 Title: Properties of the chemical elements
-Version: 0.3.0.9000
+Version: 0.4.0.9000
 Author: Taha Ahmed
 Maintainer: Taha Ahmed <taha@solarchemist.se>
 Description:

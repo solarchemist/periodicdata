@@ -83,10 +83,10 @@ A tibble with 118 rows (the chemical elements) and 80 variables:
   \item{\code{Thermal_Conductivity}}{double Thermal conductivity}
   \item{\code{Thermal_Expansion}}{double Thermal expansion}
   \item{\code{Valence}}{integer Valence electrons}
+  \item{\code{Van_der_Waals_Radius}}{double Corresponds well to published vdW radii in lite...}
   \item{\code{Vickers_Hardness}}{double Vickers hardness}
   \item{\code{XKCD_Four_Elements}}{character Reproduction of XKCD #2975 published 2024-08-21.}
   \item{\code{Young_Modulus}}{double Young's modulus}
-  \item{\code{van_der_Waals_Radius}}{double Corresponds well to published vdW radii in lite...}
 }
 }
 \source{

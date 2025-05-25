@@ -1,9 +1,5 @@
 /renv
-# to avoid messing up anyone else's PATH, we should not
-# commit .envrc (if they have direnv installed it will
-# actually run, which is not nice). This means I cannot
-# keep .envrc under version control, which is too bad.
-/.envrc
+/node_modules
 /.vscode
 /.Rproj.user
 /.Rhistory

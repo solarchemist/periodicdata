@@ -58,7 +58,7 @@ from the YAML dataset every time the vignette is rebuilt:
 
 | Property | Description (truncated) | DOI | URL |
 |:---|:---|:---|---:|
-| Adiabatic_Index | Adiabatic index, also known as the heat capacit… |  | [1](https://periodictable.com/Properties/A/AdiabaticIndex.an.html), [2](https://en.wikipedia.org/wiki/Heat_capacity_ratio) |
+| Adiabatic_Index | Adiabatic index, also known as the heat capacity ratio, the ratio of specific… |  | [1](https://periodictable.com/Properties/A/AdiabaticIndex.an.html), [2](https://en.wikipedia.org/wiki/Heat_capacity_ratio) |
 | Atomic_Number | Atomic number |  | [1](https://en.wikipedia.org/wiki/Atomic_number) |
 | Atomic_Radius | Atomic radius | [1](https://doi.org/10.1063/1.1712084) |  |
 | Atomic_Weight | Atomic weight of the longest-lived isotope. |  | [1](https://www.britannica.com/science/atomic-weight) |
@@ -70,7 +70,7 @@ from the YAML dataset every time the vignette is rebuilt:
 | CAS_Number | CAS registry number |  | [1](https://en.wikipedia.org/wiki/CAS_Registry_Number) |
 | CID_Number | CID number |  |  |
 | Colour | Colour at STP |  |  |
-| Conventional_Atomic_Weight | Standard atomic weight abridged to four signifi… | [1](https://doi.org/10.1021/acs.jchemed.6b00510) |  |
+| Conventional_Atomic_Weight | Standard atomic weight abridged to four significant digits, for uses where a … | [1](https://doi.org/10.1021/acs.jchemed.6b00510) |  |
 | Covalent_Radius | Covalent radius |  |  |
 | Critical_Pressure | Critical pressure |  | [1](https://en.wikipedia.org/wiki/Critical_points_of_the_elements_(data_page)) |
 | Critical_Temperature | Critical temperature |  | [1](https://en.wikipedia.org/wiki/Critical_points_of_the_elements_(data_page)) |
@@ -86,11 +86,11 @@ from the YAML dataset every time the vignette is rebuilt:
 | Electron_Affinity | Electron affinity |  | [1](https://en.wikipedia.org/wiki/Electron_affinity_(data_page)), [2](https://en.wikipedia.org/wiki/Electron_affinity) |
 | Electron_Configuration | Electron configuration |  |  |
 | Electronegativity | Electronegativity (Pauling) |  | [1](https://periodictable.com/Properties/A/Electronegativity.html), [2](https://en.wikipedia.org/wiki/Electronegativity#Pauling_electronegativity), [3](https://www.webelements.com/periodicity/eneg_pauling) |
-| Element_Descriptions | Element descriptions from the Debian dict-eleme… |  | [1](https://packages.debian.org/sid/all/dict-elements) |
+| Element_Descriptions | Element descriptions from the Debian dict-elements package v20001107-a-9.1. L… |  | [1](https://packages.debian.org/sid/all/dict-elements) |
 | Gas_Phase_Configuration | Configuration in gas phase |  |  |
 | Gmelin_Number | Gmelin number |  |  |
 | Group | Group assignments per the IUPAC periodic table. |  |  |
-| Group_Left_Step | Group assignments per the left step periodic ta… |  | [1](https://en.wikipedia.org/wiki/Template:Periodic_table_(left_step)) |
+| Group_Left_Step | Group assignments per the left step periodic table (Janet’s table). |  | [1](https://en.wikipedia.org/wiki/Template:Periodic_table_(left_step)) |
 | Half_Life | Half-life |  |  |
 | Heat_of_Combustion | Heat of combustion |  |  |
 | Heat_of_Fusion | Heat of fusion |  |  |
@@ -102,7 +102,7 @@ from the YAML dataset every time the vignette is rebuilt:
 | Mohs_Hardness | Mohs hardness |  | [1](https://en.wikipedia.org/wiki/Mohs_scale), [2](https://en.wikipedia.org/wiki/Hardnesses_of_the_elements_(data_page)) |
 | Molar_Volume | Molar volume |  |  |
 | Name | Name |  |  |
-| Natural_Occurrence | Natural occurrence of the elements, whether pri… |  | [1](https://en.wikipedia.org/wiki/Periodic_table#Structure), [2](https://en.wikipedia.org/wiki/Primordial_nuclide), [3](https://en.wikipedia.org/wiki/Trace_radioisotope), [4](https://en.wikipedia.org/wiki/Synthetic_element) |
+| Natural_Occurrence | Natural occurrence of the elements, whether primordial, from radioactive deca… |  | [1](https://en.wikipedia.org/wiki/Periodic_table#Structure), [2](https://en.wikipedia.org/wiki/Primordial_nuclide), [3](https://en.wikipedia.org/wiki/Trace_radioisotope), [4](https://en.wikipedia.org/wiki/Synthetic_element) |
 | Neel_Point | Neel point |  | [1](https://w.wiki/E9rs) |
 | Neutron_Cross_Section | Neutron cross section |  |  |
 | Neutron_Mass_Absorption | Neutron mass absorption |  |  |
@@ -113,7 +113,7 @@ from the YAML dataset every time the vignette is rebuilt:
 | Percent_in_Sun | Percent in the Sun |  |  |
 | Percent_in_Universe | Percent in the Universe |  |  |
 | Period | Period assignments per the IUPAC periodic table. |  |  |
-| Period_Left_Step | Period assignments per the left step periodic t… |  |  |
+| Period_Left_Step | Period assignments per the left step periodic table (Janet’s table). |  |  |
 | Phase | Phase at STP |  |  |
 | Poisson_Ratio | Poisson’s ratio |  |  |
 | Price_2010 | Price in 2010 | [1](https://doi.org/10.1039/C2RA20839C) |  |
@@ -126,18 +126,18 @@ from the YAML dataset every time the vignette is rebuilt:
 | Space_Group_Name | Space group name |  |  |
 | Space_Group_Name_LaTeX | Space group name |  |  |
 | Space_Group_Number | Space group number |  |  |
-| Specific_Heat_Capacity | The specific heat capacity, or the isobaric mas… |  | [1](https://periodictable.com/Properties/A/SpecificHeat.html), [2](https://en.wikipedia.org/wiki/Table_of_specific_heat_capacities), [3](https://material-properties.org/specific-heat-capacity-of-chemical-elements), [4](https://www.engineersedge.com/heat_transfer/heat_capacity_of_the_elements_13260.htm) |
+| Specific_Heat_Capacity | The specific heat capacity, or the isobaric mass heat capacity. |  | [1](https://periodictable.com/Properties/A/SpecificHeat.html), [2](https://en.wikipedia.org/wiki/Table_of_specific_heat_capacities), [3](https://material-properties.org/specific-heat-capacity-of-chemical-elements), [4](https://www.engineersedge.com/heat_transfer/heat_capacity_of_the_elements_13260.htm) |
 | Speed_of_Sound | Speed of sound |  |  |
-| Standard_Atomic_Weight | Standard atomic weight, or more correctly, stan… | [1](https://doi.org/10.1515/pac-2019-0603), [2](https://doi.org/10.1515/pac-2016-0402) | [1](https://www.ciaaw.org/atomic-weights.htm) |
+| Standard_Atomic_Weight | Standard atomic weight, or more correctly, standard relative atomic mass, is … | [1](https://doi.org/10.1515/pac-2019-0603), [2](https://doi.org/10.1515/pac-2016-0402) | [1](https://www.ciaaw.org/atomic-weights.htm) |
 | Superconducting_Point | Superconducting point |  |  |
 | Symbol | Symbol |  |  |
 | Thermal_Conductivity | Thermal conductivity |  | [1](https://en.wikipedia.org/wiki/List_of_thermal_conductivities) |
 | Thermal_Expansion | Thermal expansion |  |  |
 | Valence | Valence electrons |  |  |
+| Van_der_Waals_Radius | Corresponds well to published vdW radii in literature. |  |  |
 | Vickers_Hardness | Vickers hardness |  | [1](https://en.wikipedia.org/wiki/Hardnesses_of_the_elements_(data_page)) |
 | XKCD_Four_Elements | Reproduction of XKCD \#2975 published 2024-08-21. |  | [1](https://xkcd.com/2975), [2](https://www.explainxkcd.com/wiki/index.php/2975:_Classical_Periodic_Table) |
 | Young_Modulus | Young’s modulus |  |  |
-| van_der_Waals_Radius | Corresponds well to published vdW radii in lite… |  |  |
 
 ## Contribute to this package
 
@@ -150,7 +150,8 @@ YAML file `inst/extdata/periodicdata.yml`.
 To rebuild the package, I recommend you run the provided bash script in
 `tools/`. You will of course need **R**. Other rebuild requirements are
 
-- [`yq`](https://github.com/mikefarah/yq), and
+- [`yq`](https://github.com/mikefarah/yq),
+- [`pajv`](https://github.com/json-schema-everywhere/pajv),
 - renv (use renv and the provided `renv.lock` file to install required R
   packages).
 
@@ -160,7 +161,7 @@ To checkout this repository:
 $ git clone https://github.com/solarchemist/periodicdata.git
 ```
 
-To rebuild the package after having made edits to YAML:
+To rebuild the package after having made edits to the YAML data:
 
 ``` bash
 $ rebuild_package.sh --refresh-data

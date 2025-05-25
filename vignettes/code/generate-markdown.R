@@ -8,7 +8,7 @@ knitr::kable(
       dplyr::select(property, description, starts_with("doi_"), starts_with("url_")) %>%
       # remove newlines and limit length of description to something suitable
       dplyr::mutate(description = stringr::str_replace(description, "\n", " ")) %>%
-      dplyr::mutate(description = stringr::str_trunc(description, 50)) %>%
+      dplyr::mutate(description = stringr::str_trunc(description, 80)) %>%
       tidyr::unite("DOI", starts_with("doi_"), na.rm = TRUE, sep = ", ") %>%
       # ditto for URLs
       tidyr::unite("URL", starts_with("url_"), na.rm = TRUE, sep = ", "),

@@ -1,4 +1,7 @@
 ^renv$
+^node_modules$
+^package-lock\.json$
+^package\.json$
 ^.vscode$
 ^.*\.Rproj$
 ^\.Rproj\.user$

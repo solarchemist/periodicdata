@@ -192,3 +192,41 @@ Good news, we might not need to re-invent the wheel - look into `sinew::makeOxyg
 + https://yonicd.github.io/sinew/reference/makeOxyFile.html
 + https://stackoverflow.com/questions/51092509/whats-the-best-way-to-automatically-generate-roxygen2-documentation-for-a-data
 + https://blog.r-hub.io/2020/05/29/distribute-data
+
+
+
+## node env
+
+Because I want to install a JSON/YAML validator from NPM.
+My aim is not to constrain the NodeJS/NPM version but rather to keep all the installed
+npm packages local to this project and not pollute any system-wide npm packages.
+
+I added the following line to `.envrc`:
+```
+layout node
+```
+
+`direnv allow` then installed the npm package:
+```
+$ npm install pajv
+npm WARN deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm WARN deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm WARN deprecated format-unicorn@1.1.1: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
+npm WARN deprecated coffee-script@1.12.7: CoffeeScript on NPM has moved to "coffeescript" (no hyphen)
+npm WARN deprecated xlsjs@0.7.6: xlsjs has been merged into xlsx
+
+added 176 packages in 10s
+```
+
+This created the following directory and files in the local directory:
+```
+node_modules/
+package-lock.json
+package.json
+```
+
+I have added all of them to `.Rbuildignore` and `node_modules` to `.gitignore`.
+
++ https://www.npmjs.com/package/pajv
++ https://github.com/direnv/direnv/wiki/Node#using-the-layout-node-directive
++ https://stackoverflow.com/questions/48524417/should-the-package-lock-json-file-be-added-to-gitignore

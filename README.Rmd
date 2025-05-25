@@ -82,7 +82,8 @@ To add more data to the dataset, check out this repository and edit the YAML fil
 To rebuild the package, I recommend you run the provided bash script in `tools/`.
 You will of course need **R**. Other rebuild requirements are
 
-+ [`yq`](https://github.com/mikefarah/yq), and
++ [`yq`](https://github.com/mikefarah/yq),
++ [`pajv`](https://github.com/json-schema-everywhere/pajv),
 + renv (use renv and the provided `renv.lock` file to install required R packages).
 
 
@@ -91,7 +92,7 @@ To checkout this repository:
 $ git clone https://github.com/solarchemist/periodicdata.git
 ```
 
-To rebuild the package after having made edits to YAML:
+To rebuild the package after having made edits to the YAML data:
 ```{bash, eval=FALSE}
 $ rebuild_package.sh --refresh-data
 ```

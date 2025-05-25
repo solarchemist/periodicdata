@@ -89,7 +89,11 @@ render_articles=false
 parse_params "$@"
 
 
-msg "Rebuild package README"
+msg "Validating JSON schema"
+# this will return code 1 if YAML is invalid, and terminating the script
+pajv validate -s tools/schema.json -d inst/extdata/periodicdata.yml
+
+msg "Rebuilding package README"
 Rscript -e "devtools::build_readme()"
 
 msg "Clearing vignette caches"
@@ -118,7 +122,7 @@ fi
 # because periodicdata tibble is rebuilt in vignette, this chunk should occur after
 # build_vignettes for package data to be updated
 if [[ $refresh_data == "true" ]]; then
-   msg "Overwrite package data objects in R/sysdata.rda"
+   msg "Overwriting package data objects in R/sysdata.rda"
    # find this line in vignettes/periodicdata.Rmd
    # ```{r save-package-data, eval=FALSE}
    # and reset eval to TRUE
@@ -130,7 +134,7 @@ if [[ $refresh_data == "true" ]]; then
 fi
 
 if [[ $refresh_demo == "true" ]]; then
-   msg "Regenerate periodictable image files (PNG, PDF, SVG) in doc/"
+   msg "Regenerating periodictable image files (PNG, PDF, SVG) in doc/"
    # find this line in vignettes/periodicdata.Rmd
    # ```{r ggsavechunk, echo=TRUE, eval=FALSE}
    # and reset eval to TRUE
@@ -153,7 +157,7 @@ fi
 
 # it's important to push doc/ to remote forge (contains generated HTML of vignette, and more)
 # unfortunately build_vignettes() keeps adding "doc" to .gitignore
-msg "Ensure doc/ is not present in .gitignore"
+msg "Ensuring doc/ is not present in .gitignore"
 # note: sed default BRE syntax is annoying, so -E to enable Extended RE syntax
 # this command should delete the entire line (and not just its contents), not
 # leaving any trailing extra empty line (these empty lines add up otherwise)

@@ -9,6 +9,7 @@
 ^Rplots.pdf$
 ^LICENSE$
 ^Meta$
+^bin$
 ^doc$
 ^CITATION\.cff$
 ^tools$

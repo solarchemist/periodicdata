@@ -144,7 +144,7 @@ from the YAML dataset every time the vignette is rebuilt:
 Your contributions are most welcome! Please report corrections as an
 issue or PR.
 
-To add more data to the dataset, check out this repository and edit the
+To add more data to the dataset, checkout this repository and edit the
 YAML file `inst/extdata/periodicdata.yml`.
 
 To rebuild the package, I recommend you run the provided bash script in
@@ -220,8 +220,8 @@ this dataset.
 - [Atomic Weights and Isotopic Compositions with Relative Atomic Masses,
   NIST Physical Measurement
   Laboratory](https://www.nist.gov/pml/atomic-weights-and-isotopic-compositions-relative-atomic-masses)
-- [Atomic Mass Data Center,
-  NUBASE](http://amdc.in2p3.fr/web/nubase_en.html)
+  <!-- NUBASE contains experimentaly known nuclear properties, and some that have been estimated from extrapolation: mass, isomeric excitation energy, half-life, spin, parity, decay modes and intensities. -->
+- [NUBASE2020](https://amdc.impcas.ac.cn/web/nubase_en.html)
 - [Barbalace, K. “Periodic Table of Elements.”
   2007](https://environmentalchemistry.com/yogi/periodic)
 - [Elements in the Human Body and What They
@@ -233,23 +233,24 @@ this dataset.
 ### Other periodic table datasets
 
 - [pTable: equation balancer, solution calculator and chemistry
-  database, Python (10+ stars, ~30
+  database, Python (60 stars, ~30
   properties)](https://github.com/GideonWolfe/pTable)
-- [Periodic elements data, npm (100+ stars, ~20
+- [Periodic elements data, npm (150+ stars, ~20
   properties)](https://github.com/andrejewski/periodic-table)
-- [PeriodicTable.jl, Julia (20+ stars, ~20 properties with unitful
+- [PeriodicTable.jl, Julia (120+ stars, ~20 properties with unitful
   physical
   quantities)](https://github.com/JuliaPhysics/PeriodicTable.jl)
-- [Periodic-Table-JSON, simply a JSON file (100+ stars, ~20
+- [Periodic-Table-JSON, simply a JSON file (700+ stars, ~20
   properties)](https://github.com/Bowserinator/Periodic-Table-JSON)
 - [Extensible periodic table with x-ray and neutron scattering data,
-  Python (60+ stars)](https://github.com/pkienzle/periodictable)
+  Python (170+
+  stars)](https://github.com/python-periodictable/periodictable)
 - [PeriodicTable, R package on CRAN, ~25
   properties](https://cran.r-project.org/web/packages/PeriodicTable/index.html)
   by Julien Idé, with data from [Data
   Explorer](http://www.data-explorer.com/data)
   <!-- http://www.data-explorer.com/content/data/periodic-table-of-elements-csv.zip -->
-- [QCElemental, Python (50+ stars, exposes NIST CODATA, quantum
+- [QCElemental, Python (190+ stars, exposes NIST CODATA, quantum
   chemistry data, and more)](https://github.com/MolSSI/QCElemental)
 - [GTK-Periodic-Table-Molecular-Formula, C++ (\<10 stars, ~20
   properties)](https://github.com/ekuester/Periodic-Table-Molecular-Formula)
@@ -260,9 +261,9 @@ this dataset.
 - [Comprehensive Periodic Table of the Elements Scrape, Python script
   with JSON/spreadsheets (\<10 stars, ~700
   properties)](https://github.com/jwaitze/Periodic-Table-of-the-Elements-Data-Scrape)
-- [chemr, R package which uses Wikipedia’s chemical elements data (\<10
+- [chemr, R package which uses Wikipedia’s chemical elements data (\<20
   stars, ~10 properties)](https://github.com/paleolimbot/chemr)
-- [mendeleev package, Python (10+ stars, ~60
+- [mendeleev package, Python (290+ stars, ~60
   properties)](https://github.com/lmmentel/mendeleev). Authored by
   Łukasz Mentel. Project supported by the Norwegian Research Council.
 - [List of chemical elements, Wikipedia (~10
@@ -274,6 +275,14 @@ this dataset.
 ### More notes on the periodic table
 
 - <https://www.chemistryworld.com/opinion/symbols-and-tables-in-chemistry/4021317.article>
+  “Symbols and tables in chemistry”, Vanessa Seifert, Chemistry World
+  (Royal Society of Chemistry, 2025-05-12)
 - <https://blog.oup.com/2019/01/happy-sesquicentennial-periodic-table-elements>
+  “Happy sesquicentennial to the periodic table of the elements”, Eric
+  Scerri, OUPblog (Oxford University Press, 2019-01-29)
 - <https://blog.oup.com/2019/05/predicting-past-periodic-table>
-- <https://blog.wikimedia.org/2017/03/21/why-i-elements>
+  “Predicting the past with the periodic table”, Ben McFarland, OUPblog
+  (Oxford University Press, 2019-05-31)
+- <https://blog.wikimedia.org/2017/03/21/why-i-elements> “Why I
+  periodically write about the elements on Wikipedia”, Mikhail Boldyrev,
+  Diff (Wikimedia, 2017-03-21)
